@@ -6,10 +6,10 @@ This repo provides a small, componentized GitHub Actions release pipeline design
 
 Entry points → stages → jobs → steps
 
-- `pipelines/workflows/release.yml`: release entry point
-- `pipelines/workflows/stages/*`: stage composition
-- `pipelines/jobs/*`: job definitions
-- `pipelines/steps/*`: small, single-purpose steps
+- `.github/workflows/release.yml`: release entry point
+- `.github/workflows/stages/*`: stage composition
+- `.github/jobs/*`: job definitions
+- `.github/steps/*`: small, single-purpose steps
 
 ## Required inputs (entry point)
 

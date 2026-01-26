@@ -16,14 +16,14 @@ on:
 jobs:
   build_app:
     # Job: build application
-    uses: ./pipelines/jobs/build/build-app.yml
+    uses: ./.github/jobs/build/build-app.yml
     with:
       app_name: ${{ inputs.app_name }}
 
   build_container:
     # Job: build container image
     needs: build_app
-    uses: ./pipelines/jobs/build/build-container.yml
+    uses: ./.github/jobs/build/build-container.yml
     with:
       image_name: ${{ inputs.image_name }}
       image_tag: ${{ inputs.image_tag }}
@@ -31,7 +31,7 @@ jobs:
   push_image:
     # Job: push container image
     needs: build_container
-    uses: ./pipelines/jobs/build/push-image.yml
+    uses: ./.github/jobs/build/push-image.yml
     with:
       image_name: ${{ inputs.image_name }}
       image_tag: ${{ inputs.image_tag }}

@@ -25,12 +25,12 @@ jobs:
           echo "Deploying to ${{ inputs.deploy_env }}"
 
       - name: Azure login
-        uses: ./pipelines/steps/azure/login.yml
+        uses: ./.github/steps/azure/login.yml
         with:
           azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy container to Web App
-        uses: ./pipelines/steps/azure/deploy-webapp.yml
+        uses: ./.github/steps/azure/deploy-webapp.yml
         with:
           azure_webapp_name: ${{ inputs.azure_webapp_name }}
           image_name: ${{ inputs.image_name }}
