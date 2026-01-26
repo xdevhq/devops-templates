@@ -1,0 +1,10 @@
+# Step: deploy container to Azure Web App (Linux, container-based).
+parameters:
+  azure_deploy_command: ""
+  image_full_name: ""
+  app_name: ""
+  registry_url: ""
+
+steps:
+  - name: azure_webapp_deploy
+    run: "${{ parameters.azure_deploy_command }}"

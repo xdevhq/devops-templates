@@ -1,0 +1,39 @@
+# Release entry point: multi-stage build -> deploy orchestration.
+# Template include syntax is CI-specific; adapt `template:` to your platform.
+parameters:
+  app_name: ""
+  image_name: ""
+  image_tag: ""
+  registry_url: ""
+  registry_repository: ""
+  build_command: ""                # e.g., make build or npm run build
+  container_build_command: ""       # e.g., docker build -t ...
+  container_tag_command: ""         # e.g., docker tag ...
+  container_push_command: ""        # e.g., docker push ...
+  environment_name: ""              # dev | test | prod (string)
+  azure_auth_command: ""            # e.g., az login ...
+  azure_deploy_command: ""          # e.g., az webapp config container set ...
+  deploy_verify_command: ""         # e.g., az webapp deployment list ...
+
+stages:
+  - template: ../stages/build-stage.yml
+    parameters:
+      app_name: "${{ parameters.app_name }}"
+      image_name: "${{ parameters.image_name }}"
+      image_tag: "${{ parameters.image_tag }}"
+      registry_url: "${{ parameters.registry_url }}"
+      registry_repository: "${{ parameters.registry_repository }}"
+      build_command: "${{ parameters.build_command }}"
+      container_build_command: "${{ parameters.container_build_command }}"
+      container_tag_command: "${{ parameters.container_tag_command }}"
+      container_push_command: "${{ parameters.container_push_command }}"
+
+  - template: ../stages/deploy-stage.yml
+    parameters:
+      environment_name: "${{ parameters.environment_name }}"
+      azure_auth_command: "${{ parameters.azure_auth_command }}"
+      azure_deploy_command: "${{ parameters.azure_deploy_command }}"
+      deploy_verify_command: "${{ parameters.deploy_verify_command }}"
+      image_full_name: "${{ parameters.registry_url }}/${{ parameters.registry_repository }}/${{ parameters.image_name }}:${{ parameters.image_tag }}"
+      app_name: "${{ parameters.app_name }}"
+      registry_url: "${{ parameters.registry_url }}"

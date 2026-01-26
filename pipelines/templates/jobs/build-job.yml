@@ -1,0 +1,31 @@
+# Build job: assembles reusable step templates.
+parameters:
+  app_name: ""
+  image_name: ""
+  image_tag: ""
+  registry_url: ""
+  registry_repository: ""
+  build_command: ""
+  container_build_command: ""
+  container_tag_command: ""
+  container_push_command: ""
+
+job: build
+steps:
+  - template: ../steps/checkout.yml
+
+  - template: ../steps/app-build.yml
+    parameters:
+      build_command: "${{ parameters.build_command }}"
+
+  - template: ../steps/container-build.yml
+    parameters:
+      container_build_command: "${{ parameters.container_build_command }}"
+
+  - template: ../steps/container-tag.yml
+    parameters:
+      container_tag_command: "${{ parameters.container_tag_command }}"
+
+  - template: ../steps/container-push.yml
+    parameters:
+      container_push_command: "${{ parameters.container_push_command }}"

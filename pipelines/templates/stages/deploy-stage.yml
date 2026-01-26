@@ -1,0 +1,21 @@
+# Deploy stage: select environment -> authenticate -> deploy -> verify start.
+parameters:
+  environment_name: ""
+  azure_auth_command: ""
+  azure_deploy_command: ""
+  deploy_verify_command: ""
+  image_full_name: ""
+  app_name: ""
+  registry_url: ""
+
+stage: deploy
+jobs:
+  - template: ../jobs/deploy-job.yml
+    parameters:
+      environment_name: "${{ parameters.environment_name }}"
+      azure_auth_command: "${{ parameters.azure_auth_command }}"
+      azure_deploy_command: "${{ parameters.azure_deploy_command }}"
+      deploy_verify_command: "${{ parameters.deploy_verify_command }}"
+      image_full_name: "${{ parameters.image_full_name }}"
+      app_name: "${{ parameters.app_name }}"
+      registry_url: "${{ parameters.registry_url }}"

@@ -1,0 +1,7 @@
+# Step: verify deployment started (minimal, no health checks).
+parameters:
+  deploy_verify_command: ""
+
+steps:
+  - name: deploy_verify
+    run: "${{ parameters.deploy_verify_command }}"

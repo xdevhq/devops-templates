@@ -1,0 +1,7 @@
+# Step: select environment (dev/test/prod concept only).
+parameters:
+  environment_name: ""
+
+steps:
+  - name: select_environment
+    run: "echo 'environment=${{ parameters.environment_name }}'"

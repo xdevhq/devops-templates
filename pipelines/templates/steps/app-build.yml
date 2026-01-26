@@ -1,0 +1,7 @@
+# Step: application build (language-agnostic).
+parameters:
+  build_command: ""
+
+steps:
+  - name: app_build
+    run: "${{ parameters.build_command }}"

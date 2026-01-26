@@ -1,0 +1,7 @@
+# Step: container build (registry-agnostic).
+parameters:
+  container_build_command: ""
+
+steps:
+  - name: container_build
+    run: "${{ parameters.container_build_command }}"
