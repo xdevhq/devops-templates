@@ -1,0 +1,18 @@
+name: Azure Web App Deploy
+
+inputs:
+  azure_webapp_name:
+    required: true
+  image_name:
+    required: true
+  image_tag:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Deploy container image
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ inputs.azure_webapp_name }}
+        images: ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}

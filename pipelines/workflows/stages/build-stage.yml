@@ -1,0 +1,37 @@
+name: Build Stage
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+
+jobs:
+  build_app:
+    # Job: build application
+    uses: ./pipelines/jobs/build/build-app.yml
+    with:
+      app_name: ${{ inputs.app_name }}
+
+  build_container:
+    # Job: build container image
+    needs: build_app
+    uses: ./pipelines/jobs/build/build-container.yml
+    with:
+      image_name: ${{ inputs.image_name }}
+      image_tag: ${{ inputs.image_tag }}
+
+  push_image:
+    # Job: push container image
+    needs: build_container
+    uses: ./pipelines/jobs/build/push-image.yml
+    with:
+      image_name: ${{ inputs.image_name }}
+      image_tag: ${{ inputs.image_tag }}

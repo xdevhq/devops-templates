@@ -1,0 +1,15 @@
+name: Podman Build Image
+
+inputs:
+  image_name:
+    required: true
+  image_tag:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build container image
+      run: |
+        podman build -t "${{ inputs.image_name }}:${{ inputs.image_tag }}" .
+      shell: bash

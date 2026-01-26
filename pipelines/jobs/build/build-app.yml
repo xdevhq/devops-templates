@@ -1,0 +1,20 @@
+name: Build App
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+
+jobs:
+  build_app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build application (placeholder)
+        run: |
+          echo "Building ${{ inputs.app_name }}"
+          echo "Add your language-specific build here."

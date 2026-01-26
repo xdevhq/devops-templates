@@ -1,0 +1,24 @@
+name: Build Container Image
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+
+jobs:
+  build_container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build image with Podman
+        uses: ./pipelines/steps/podman/build-image.yml
+        with:
+          image_name: ${{ inputs.image_name }}
+          image_tag: ${{ inputs.image_tag }}
