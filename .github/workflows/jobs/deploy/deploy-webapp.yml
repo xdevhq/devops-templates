@@ -12,12 +12,10 @@ on:
       image_tag:
         required: true
         type: string
-      azure_webapp_name:
-        required: true
-        type: string
 
 jobs:
   deploy_webapp:
+    environment: ${{ inputs.deploy_env }}
     runs-on: ubuntu-latest
     steps:
       - name: Select environment
@@ -32,6 +30,6 @@ jobs:
       - name: Deploy container to Web App
         uses: ./.github/workflows/steps/azure/deploy-webapp
         with:
-          azure_webapp_name: ${{ inputs.azure_webapp_name }}
+          azure_webapp_name: ${{ vars.AZURE_WEBAPP_NAME }}
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}

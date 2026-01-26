@@ -2,63 +2,25 @@ name: Release
 
 on:
   workflow_call:
-    inputs:
-      app_name:
-        required: true
-        type: string
-      image_name:
-        required: true
-        type: string
-      image_tag:
-        required: true
-        type: string
-      deploy_env:
-        required: true
-        type: string
-      azure_webapp_name:
-        required: true
-        type: string
     secrets:
       AZURE_CREDENTIALS:
         required: true
-  workflow_dispatch:
-    inputs:
-      app_name:
-        description: Application name
-        required: true
-        type: string
-      image_name:
-        description: Image name (no registry)
-        required: true
-        type: string
-      image_tag:
-        description: Image tag
-        required: true
-        type: string
-      deploy_env:
-        description: Deployment environment (dev/test/prod)
-        required: true
-        type: string
-      azure_webapp_name:
-        description: Azure Web App name
-        required: true
-        type: string
+  workflow_dispatch: {}
 
 jobs:
   build:
     # Stage: build
     uses: ./stages/build-stage.yml
     with:
-      app_name: ${{ inputs.app_name }}
-      image_name: ${{ inputs.image_name }}
-      image_tag: ${{ inputs.image_tag }}
+      app_name: ${{ github.event.repository.name }}
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}
 
   deploy:
     # Stage: deploy
     needs: build
     uses: ./stages/deploy-stage.yml
     with:
-      deploy_env: ${{ inputs.deploy_env }}
-      image_name: ${{ inputs.image_name }}
-      image_tag: ${{ inputs.image_tag }}
-      azure_webapp_name: ${{ inputs.azure_webapp_name }}
+      deploy_env: prod
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}

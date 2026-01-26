@@ -11,18 +11,10 @@ Entry points → stages → jobs → steps
 - `.github/workflows/jobs/*`: job definitions
 - `.github/workflows/steps/*`: small, single-purpose steps (composite actions)
 
-## Required inputs (entry point)
-
-- `app_name`: application name
-- `image_name`: image name (no registry)
-- `image_tag`: image tag
-- `deploy_env`: dev/test/prod
-- `azure_webapp_name`: Azure Web App name
-
 ## Required secrets
 
 - `GITHUB_TOKEN`: for GHCR push (provided by GitHub)
-- `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login`
+- `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (environment secret)
 
 ## Consume from another repo
 
@@ -30,14 +22,15 @@ Entry points → stages → jobs → steps
 jobs:
   release:
     uses: alexhovy/devops-templates/.github/workflows/release.yml@main
-    with:
-      app_name: ${{ inputs.app_name }}
-      image_name: ${{ inputs.image_name }}
-      image_tag: ${{ inputs.image_tag }}
-      deploy_env: ${{ inputs.deploy_env }}
-      azure_webapp_name: ${{ inputs.azure_webapp_name }}
     secrets: inherit
 ```
+
+## Environment config in the consuming repo
+
+- Create a GitHub Environment named `prod`.
+- Set `AZURE_WEBAPP_NAME` as an environment variable (not secret).
+- Set `AZURE_CREDENTIALS` as an environment secret.
+
 
 ## Notes
 

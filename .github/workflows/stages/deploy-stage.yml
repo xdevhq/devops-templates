@@ -12,9 +12,6 @@ on:
       image_tag:
         required: true
         type: string
-      azure_webapp_name:
-        required: true
-        type: string
 
 jobs:
   deploy_webapp:
@@ -24,4 +21,3 @@ jobs:
       deploy_env: ${{ inputs.deploy_env }}
       image_name: ${{ inputs.image_name }}
       image_tag: ${{ inputs.image_tag }}
-      azure_webapp_name: ${{ inputs.azure_webapp_name }}
