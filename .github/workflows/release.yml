@@ -1,6 +1,26 @@
 name: Release
 
 on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      deploy_env:
+        required: true
+        type: string
+      azure_webapp_name:
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
   workflow_dispatch:
     inputs:
       app_name:
@@ -27,7 +47,7 @@ on:
 jobs:
   build:
     # Stage: build
-    uses: ./.github/workflows/stages/build-stage.yml
+    uses: ./stages/build-stage.yml
     with:
       app_name: ${{ inputs.app_name }}
       image_name: ${{ inputs.image_name }}
@@ -36,7 +56,7 @@ jobs:
   deploy:
     # Stage: deploy
     needs: build
-    uses: ./.github/workflows/stages/deploy-stage.yml
+    uses: ./stages/deploy-stage.yml
     with:
       deploy_env: ${{ inputs.deploy_env }}
       image_name: ${{ inputs.image_name }}

@@ -8,8 +8,8 @@ Entry points → stages → jobs → steps
 
 - `.github/workflows/release.yml`: release entry point
 - `.github/workflows/stages/*`: stage composition
-- `.github/jobs/*`: job definitions
-- `.github/steps/*`: small, single-purpose steps
+- `.github/workflows/jobs/*`: job definitions
+- `.github/workflows/steps/*`: small, single-purpose steps (composite actions)
 
 ## Required inputs (entry point)
 
@@ -24,9 +24,24 @@ Entry points → stages → jobs → steps
 - `GITHUB_TOKEN`: for GHCR push (provided by GitHub)
 - `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login`
 
+## Consume from another repo
+
+```yaml
+jobs:
+  release:
+    uses: alexhovy/devops-templates/.github/workflows/release.yml@main
+    with:
+      app_name: ${{ inputs.app_name }}
+      image_name: ${{ inputs.image_name }}
+      image_tag: ${{ inputs.image_tag }}
+      deploy_env: ${{ inputs.deploy_env }}
+      azure_webapp_name: ${{ inputs.azure_webapp_name }}
+    secrets: inherit
+```
+
 ## Notes
 
-- This is a minimal, design-focused layout. GitHub Actions only loads workflows from `.github/workflows`, and composite actions require an `action.yml` inside a directory. If you want to execute these as-is, we can mirror the structure under `.github/` or refactor steps into inline commands.
+- This is a minimal, design-focused layout. GitHub Actions only loads workflows from `.github/workflows`, and composite actions require an `action.yml` inside a directory.
 - Podman is used for build/tag/push. No Docker.
 - Azure logic is isolated to deploy components.
 

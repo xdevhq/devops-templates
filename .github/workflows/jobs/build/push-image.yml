@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Tag image for GHCR
-        uses: ./.github/steps/podman/tag-image.yml
+        uses: ./.github/workflows/steps/podman/tag-image
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
@@ -28,7 +28,7 @@ jobs:
           podman login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Push image to GHCR
-        uses: ./.github/steps/podman/push-image.yml
+        uses: ./.github/workflows/steps/podman/push-image
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
