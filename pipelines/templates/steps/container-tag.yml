@@ -1,7 +1,0 @@
-# Step: tag container image.
-parameters:
-  container_tag_command: ""
-
-steps:
-  - name: container_tag
-    run: "${{ parameters.container_tag_command }}"

@@ -1,7 +1,0 @@
-# Step: push container image to registry.
-parameters:
-  container_push_command: ""
-
-steps:
-  - name: container_push
-    run: "${{ parameters.container_push_command }}"

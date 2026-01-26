@@ -1,7 +1,0 @@
-# Step: Azure authentication (abstracted).
-parameters:
-  azure_auth_command: ""
-
-steps:
-  - name: azure_auth
-    run: "${{ parameters.azure_auth_command }}"

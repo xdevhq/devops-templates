@@ -1,4 +1,0 @@
-# Step: source checkout (implementation depends on CI).
-steps:
-  - name: checkout
-    run: "echo 'checkout source'"
