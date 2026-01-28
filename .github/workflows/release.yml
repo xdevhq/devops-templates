@@ -2,6 +2,11 @@ name: Release
 
 on:
   workflow_call:
+    inputs:
+      deploy_env:
+        description: "GitHub Environment name (e.g., dev, test, prod)"
+        required: true
+        type: string
     secrets:
       AZURE_CREDENTIALS:
         required: true
@@ -21,6 +26,6 @@ jobs:
     needs: build
     uses: ./.github/workflows/deploy-stage.yml
     with:
-      deploy_env: prod
+      deploy_env: ${{ inputs.deploy_env }}
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.sha }}
