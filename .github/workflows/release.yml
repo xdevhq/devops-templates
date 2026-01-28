@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     # Stage: build
-    uses: ./.github/workflows/stages/build-stage.yml
+    uses: ./.github/workflows/build-stage.yml
     with:
       app_name: ${{ github.event.repository.name }}
       image_name: ${{ github.event.repository.name }}
@@ -19,7 +19,7 @@ jobs:
   deploy:
     # Stage: deploy
     needs: build
-    uses: ./.github/workflows/stages/deploy-stage.yml
+    uses: ./.github/workflows/deploy-stage.yml
     with:
       deploy_env: prod
       image_name: ${{ github.event.repository.name }}

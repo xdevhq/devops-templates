@@ -16,7 +16,7 @@ on:
 jobs:
   deploy_webapp:
     # Job: deploy to Azure Web App
-    uses: ./.github/workflows/jobs/deploy/deploy-webapp.yml
+    uses: ./.github/workflows/deploy-webapp.yml
     with:
       deploy_env: ${{ inputs.deploy_env }}
       image_name: ${{ inputs.image_name }}
