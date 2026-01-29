@@ -25,14 +25,6 @@ permissions:
   contents: read
   packages: write
 
-on:
-  workflow_dispatch:
-    inputs:
-      deploy_env:
-        type: choice
-        options: [dev, test, prod]
-        default: dev
-
 jobs:
   build:
     uses: alexhovy/devops-templates/.github/workflows/build.yml@main
@@ -42,15 +34,43 @@ jobs:
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+```
+
+Recommended pattern (build once, deploy many) uses `workflow_run`:
+
+```yaml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    uses: alexhovy/devops-templates/.github/workflows/build.yml@main
+    with:
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+```yaml
+name: Deploy Prod
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
+
+jobs:
   deploy:
-    needs: build
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: alexhovy/devops-templates/.github/workflows/deploy.yml@main
     with:
-      deploy_env: ${{ inputs.deploy_env }}
-      image_name: ${{ needs.build.outputs.image_name }}
-      image_tag: ${{ needs.build.outputs.image_tag }}
+      deploy_env: prod
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.event.workflow_run.head_sha }}
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 ```
 
 ## Environment config in the consuming repo
@@ -58,6 +78,7 @@ jobs:
 - Create GitHub Environments as needed (e.g., `dev`, `test`, `prod`).
 - Set `AZURE_WEBAPP_NAME` as an environment variable (not secret).
 - Set `AZURE_CREDENTIALS` as a repo secret (reusable workflows require explicit secrets).
+- To gate production, add required reviewers on the `prod` environment in GitHub.
 
 ## Get AZURE_CREDENTIALS (service principal JSON)
 
