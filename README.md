@@ -10,6 +10,9 @@ Entry points → stages → jobs → steps
 - `.github/workflows/*-stage.yml`: stage composition
 - `.github/workflows/*-app.yml`, `*-container.yml`, `*-image.yml`, `*-webapp.yml`: job definitions
 - `.github/actions/*`: small, single-purpose steps (composite actions)
+- `.github/containerfiles/*`: reusable Containerfile templates used by build steps
+
+Build step expects a template name (e.g., `node`) to select a Containerfile from `.github/containerfiles/<template>/Containerfile`.
 
 ## Required secrets
 

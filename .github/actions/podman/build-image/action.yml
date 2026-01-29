@@ -5,11 +5,27 @@ inputs:
     required: true
   image_tag:
     required: true
+  context:
+    required: false
+    default: "."
+  containerfile:
+    required: false
+    default: "Containerfile"
+  template:
+    required: true
+    description: "Template name under .github/containerfiles (e.g., node)"
 
 runs:
   using: composite
   steps:
     - name: Build container image
       run: |
-        podman build -t "${{ inputs.image_name }}:${{ inputs.image_tag }}" .
+        set -euo pipefail
+        context="${{ inputs.context }}"
+        containerfile="${{ inputs.containerfile }}"
+        template="${{ inputs.template }}"
+        if [ ! -f "${context}/${containerfile}" ]; then
+          cp "${{ github.action_path }}/../../containerfiles/${template}/Containerfile" "${context}/${containerfile}"
+        fi
+        podman build -f "${context}/${containerfile}" -t "${{ inputs.image_name }}:${{ inputs.image_tag }}" "${context}"
       shell: bash

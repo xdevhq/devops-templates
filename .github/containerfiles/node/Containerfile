@@ -1,0 +1,37 @@
+FROM node:20-bookworm-slim AS deps
+WORKDIR /app
+COPY package.json ./
+COPY package-lock.json pnpm-lock.yaml yarn.lock ./
+RUN corepack enable
+RUN if [ -f pnpm-lock.yaml ]; then \
+      corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile; \
+    elif [ -f yarn.lock ]; then \
+      corepack prepare yarn@4.6.0 --activate && yarn install --immutable; \
+    elif [ -f package-lock.json ]; then \
+      npm ci; \
+    else \
+      npm install; \
+    fi
+
+FROM node:20-bookworm-slim AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN corepack enable
+RUN if [ -f pnpm-lock.yaml ]; then \
+      corepack prepare pnpm@9.15.0 --activate && pnpm run build; \
+    elif [ -f yarn.lock ]; then \
+      corepack prepare yarn@4.6.0 --activate && yarn run build; \
+    else \
+      npm run build; \
+    fi
+
+FROM node:20-bookworm-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+RUN useradd -m -u 1001 appuser
+COPY --from=builder /app ./
+USER appuser
+EXPOSE 3000
+CMD ["npm","run","start"]
