@@ -19,19 +19,7 @@ on:
         value: ${{ inputs.image_tag }}
 
 jobs:
-  build_app:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Build application (placeholder)
-        run: |
-          echo "Building ${{ inputs.image_name }}"
-          echo "Add your language-specific build here."
-
   build_container:
-    needs: build_app
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
