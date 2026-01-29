@@ -23,12 +23,12 @@ jobs:
           echo "Deploying to ${{ inputs.deploy_env }}"
 
       - name: Azure login
-        uses: alexhovy/devops-templates/.github/workflows/steps/azure/login@main
+        uses: alexhovy/devops-templates/.github/actions/azure/login@main
         with:
           azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy container to Web App
-        uses: alexhovy/devops-templates/.github/workflows/steps/azure/deploy-webapp@main
+        uses: alexhovy/devops-templates/.github/actions/azure/deploy-webapp@main
         with:
           azure_webapp_name: ${{ vars.AZURE_WEBAPP_NAME }}
           image_name: ${{ inputs.image_name }}

@@ -9,7 +9,7 @@ Entry points → stages → jobs → steps
 - `.github/workflows/release.yml`: release entry point
 - `.github/workflows/*-stage.yml`: stage composition
 - `.github/workflows/*-app.yml`, `*-container.yml`, `*-image.yml`, `*-webapp.yml`: job definitions
-- `.github/workflows/steps/*`: small, single-purpose steps (composite actions)
+- `.github/actions/*`: small, single-purpose steps (composite actions)
 
 ## Required secrets
 
