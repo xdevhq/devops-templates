@@ -3,14 +3,30 @@ name: Azure Web App Deploy
 inputs:
   azure_webapp_name:
     required: true
+  azure_resource_group:
+    required: true
   image_name:
     required: true
   image_tag:
+    required: true
+  ghcr_username:
+    required: true
+  ghcr_password:
     required: true
 
 runs:
   using: composite
   steps:
+    - name: Configure GHCR registry credentials
+      shell: bash
+      run: |
+        az webapp config container set \
+          --name "${{ inputs.azure_webapp_name }}" \
+          --resource-group "${{ inputs.azure_resource_group }}" \
+          --docker-registry-server-url "https://ghcr.io" \
+          --docker-registry-server-user "${{ inputs.ghcr_username }}" \
+          --docker-registry-server-password "${{ inputs.ghcr_password }}"
+
     - name: Deploy container image
       uses: azure/webapps-deploy@v3
       with:

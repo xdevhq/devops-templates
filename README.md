@@ -17,6 +17,8 @@ Build step expects a template name (e.g., `node`) to select a Containerfile from
 
 - `GHCR_TOKEN`: for GHCR push (use `${{ secrets.GITHUB_TOKEN }}` from the consuming repo)
 - `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (repo secret)
+- `GHCR_USERNAME`: GitHub username for GHCR pull (repo secret)
+- `GHCR_PASSWORD`: GitHub PAT with `read:packages` for GHCR pull (repo secret)
 
 ## Consume from another repo
 
@@ -71,12 +73,15 @@ jobs:
       image_tag: ${{ github.event.workflow_run.head_sha }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_PASSWORD: ${{ secrets.GHCR_PASSWORD }}
 ```
 
 ## Environment config in the consuming repo
 
 - Create GitHub Environments as needed (e.g., `dev`, `test`, `prod`).
 - Set `AZURE_WEBAPP_NAME` as an environment variable (not secret).
+- Set `AZURE_RESOURCE_GROUP` as an environment variable (not secret).
 - Set `AZURE_CREDENTIALS` as a repo secret (reusable workflows require explicit secrets).
 - To gate production, add required reviewers on the `prod` environment in GitHub.
 
