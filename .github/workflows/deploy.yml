@@ -1,4 +1,4 @@
-name: Deploy Web App
+name: Deploy
 
 on:
   workflow_call:
@@ -12,6 +12,9 @@ on:
       image_tag:
         required: true
         type: string
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
 
 jobs:
   deploy_webapp:

@@ -1,14 +1,13 @@
-# Minimal Release Pipeline (v0.1)
+# Minimal Build + Deploy Pipeline (v0.1)
 
-This repo provides a small, componentized GitHub Actions release pipeline design for containerized apps deployed to Azure Web App for Containers (Linux). It is intentionally simple and language-agnostic.
+This repo provides a small, componentized GitHub Actions build + deploy design for containerized apps deployed to Azure Web App for Containers (Linux). It is intentionally simple and language-agnostic.
 
 ## How it composes
 
-Entry points → stages → jobs → steps
+Entry points → jobs → steps
 
-- `.github/workflows/release.yml`: release entry point
-- `.github/workflows/*-stage.yml`: stage composition
-- `.github/workflows/*-app.yml`, `*-container.yml`, `*-image.yml`, `*-webapp.yml`: job definitions
+- `.github/workflows/build.yml`: build + push entry point
+- `.github/workflows/deploy.yml`: deploy entry point
 - `.github/actions/*`: small, single-purpose steps (composite actions)
 - `.github/containerfiles/*`: reusable Containerfile templates used by build steps
 
@@ -16,8 +15,8 @@ Build step expects a template name (e.g., `node`) to select a Containerfile from
 
 ## Required secrets
 
-- `GITHUB_TOKEN`: for GHCR push (provided by GitHub)
-- `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (environment secret)
+- `GHCR_TOKEN`: for GHCR push (use `${{ secrets.GITHUB_TOKEN }}` from the consuming repo)
+- `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (repo secret)
 
 ## Consume from another repo
 
@@ -26,17 +25,39 @@ permissions:
   contents: read
   packages: write
 
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        type: choice
+        options: [dev, test, prod]
+        default: dev
+
 jobs:
-  release:
-    uses: alexhovy/devops-templates/.github/workflows/release.yml@main
-    secrets: inherit
+  build:
+    uses: alexhovy/devops-templates/.github/workflows/build.yml@main
+    with:
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build
+    uses: alexhovy/devops-templates/.github/workflows/deploy.yml@main
+    with:
+      deploy_env: ${{ inputs.deploy_env }}
+      image_name: ${{ needs.build.outputs.image_name }}
+      image_tag: ${{ needs.build.outputs.image_tag }}
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 ```
 
 ## Environment config in the consuming repo
 
-- Create a GitHub Environment named `prod`.
+- Create GitHub Environments as needed (e.g., `dev`, `test`, `prod`).
 - Set `AZURE_WEBAPP_NAME` as an environment variable (not secret).
-- Set `AZURE_CREDENTIALS` as an environment secret.
+- Set `AZURE_CREDENTIALS` as a repo secret (reusable workflows require explicit secrets).
 
 ## Get AZURE_CREDENTIALS (service principal JSON)
 
@@ -54,7 +75,7 @@ Generate the Azure Credentials:
 az ad sp create-for-rbac --name "gh-actions-webapp-deploy" --role "Contributor" --scopes "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Web/sites/<WEBAPP_NAME>" --query "{clientId:appId, clientSecret:password, tenantId:tenant, subscriptionId:'<SUB_ID>'}" --output json > azure-credentials.json
 ```
 
-Save the JSON as the `AZURE_CREDENTIALS` secret in the `prod` environment.
+Save the JSON as the `AZURE_CREDENTIALS` repo secret.
 
 ## GITHUB_TOKEN (GHCR push)
 

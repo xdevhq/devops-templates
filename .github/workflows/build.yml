@@ -1,0 +1,88 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+    secrets:
+      GHCR_TOKEN:
+        required: true
+    outputs:
+      image_name:
+        value: ${{ inputs.image_name }}
+      image_tag:
+        value: ${{ inputs.image_tag }}
+
+jobs:
+  build_app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build application (placeholder)
+        run: |
+          echo "Building ${{ inputs.image_name }}"
+          echo "Add your language-specific build here."
+
+  build_container:
+    needs: build_app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build image with Podman
+        uses: alexhovy/devops-templates/.github/actions/podman/build-image@main
+        with:
+          image_name: ${{ inputs.image_name }}
+          image_tag: ${{ inputs.image_tag }}
+          template: node
+
+      - name: Save image as artifact
+        run: |
+          podman save -o /tmp/image.tar "${{ inputs.image_name }}:${{ inputs.image_tag }}"
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ inputs.image_name }}-${{ inputs.image_tag }}
+          path: /tmp/image.tar
+
+  push_image:
+    needs: build_container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-${{ inputs.image_name }}-${{ inputs.image_tag }}
+          path: /tmp
+
+      - name: Load image
+        run: |
+          podman load -i /tmp/image.tar
+
+      - name: Tag image for GHCR
+        uses: alexhovy/devops-templates/.github/actions/podman/tag-image@main
+        with:
+          image_name: ${{ inputs.image_name }}
+          image_tag: ${{ inputs.image_tag }}
+
+      - name: Login to GHCR
+        run: |
+          podman login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GHCR_TOKEN }}"
+
+      - name: Push image to GHCR
+        uses: alexhovy/devops-templates/.github/actions/podman/push-image@main
+        with:
+          image_name: ${{ inputs.image_name }}
+          image_tag: ${{ inputs.image_tag }}
