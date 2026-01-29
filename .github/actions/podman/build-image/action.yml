@@ -25,7 +25,7 @@ runs:
         containerfile="${{ inputs.containerfile }}"
         template="${{ inputs.template }}"
         if [ ! -f "${context}/${containerfile}" ]; then
-          cp "${{ github.action_path }}/../../containerfiles/${template}/Containerfile" "${context}/${containerfile}"
+          cp "${{ github.action_path }}/../../../containerfiles/${template}/Containerfile" "${context}/${containerfile}"
         fi
         podman build -f "${context}/${containerfile}" -t "${{ inputs.image_name }}:${{ inputs.image_tag }}" "${context}"
       shell: bash
