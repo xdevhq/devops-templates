@@ -80,6 +80,12 @@ jobs:
 - Set `AZURE_CREDENTIALS` as a repo secret (reusable workflows require explicit secrets).
 - To gate production, add required reviewers on the `prod` environment in GitHub.
 
+## Template repo access
+
+If this repo is private, allow other repos to use its reusable workflows:
+
+- Settings → Actions → General → Access → "Accessible from repositories owned by the user 'username'"
+
 ## Get AZURE_CREDENTIALS (service principal JSON)
 
 Use Azure CLI to create a service principal scoped to the target Web App (least privilege).
