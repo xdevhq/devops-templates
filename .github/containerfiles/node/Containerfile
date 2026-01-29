@@ -1,7 +1,6 @@
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
-COPY package.json ./
-COPY package-lock.json pnpm-lock.yaml yarn.lock ./
+COPY . .
 RUN corepack enable
 RUN if [ -f pnpm-lock.yaml ]; then \
       corepack prepare pnpm@9.15.0 --activate && pnpm install --frozen-lockfile; \
@@ -15,8 +14,7 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app ./
 RUN corepack enable
 RUN if [ -f pnpm-lock.yaml ]; then \
       corepack prepare pnpm@9.15.0 --activate && pnpm run build; \
