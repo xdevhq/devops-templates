@@ -23,3 +23,14 @@ jobs:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
           template: node
+
+      - name: Save image as artifact
+        run: |
+          podman save -o /tmp/image.tar "${{ inputs.image_name }}:${{ inputs.image_tag }}"
+        shell: bash
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ inputs.image_name }}-${{ inputs.image_tag }}
+          path: /tmp/image.tar
