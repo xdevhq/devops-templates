@@ -38,7 +38,8 @@ runs:
             nuget_add_args+=(--username "${source_username}")
           fi
           dotnet nuget add source "${nuget_add_args[@]}"
-          dotnet restore "${project_path}" --source "${source_url}"
+          # Restore with all configured sources (e.g., external + nuget.org).
+          dotnet restore "${project_path}"
         else
           dotnet restore "${project_path}"
         fi
