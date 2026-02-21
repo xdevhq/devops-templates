@@ -8,6 +8,7 @@ Entry points → jobs → steps
 
 - `.github/workflows/build.yml`: build + push entry point
 - `.github/workflows/deploy.yml`: deploy entry point
+- `.github/workflows/nuget.yml`: NuGet pack + publish entry point
 - `.github/actions/*`: small, single-purpose steps (composite actions)
 - `.github/containerfiles/*`: reusable Containerfile templates used by build steps
 
@@ -19,6 +20,8 @@ Build step expects a template name (e.g., `node`) to select a Containerfile from
 - `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (repo secret)
 - `GHCR_USERNAME`: GitHub username for GHCR pull (repo secret)
 - `GHCR_PASSWORD`: GitHub PAT with `read:packages` for GHCR pull (repo secret)
+- `NUGET_API_KEY`: API key used by `.github/workflows/nuget.yml` to publish packages
+- `SOURCE_PASSWORD` (optional): password/PAT for private NuGet feed restore
 
 ## Consume from another repo
 
@@ -29,7 +32,7 @@ permissions:
 
 jobs:
   build:
-    uses: alexhovy/devops-templates/.github/workflows/build.yml@main
+    uses: <owner>/<templates-repo>/.github/workflows/build.yml@main
     with:
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.sha }}
@@ -37,6 +40,32 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ```
+
+NuGet package entry point:
+
+```yaml
+name: Publish NuGet
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  publish:
+    permissions:
+      contents: read
+      packages: write
+    uses: <owner>/<templates-repo>/.github/workflows/nuget.yml@main
+    with:
+      project_path: ./src/<path-to-project>.csproj
+      package_version: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
+      source_url: https://api.nuget.org/v3/index.json
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+```
+
+Set `project_path` to your repository's `.csproj` path.
 
 Recommended pattern (build once, deploy many) uses `workflow_run`:
 
@@ -47,7 +76,7 @@ on:
 
 jobs:
   build:
-    uses: alexhovy/devops-templates/.github/workflows/build.yml@main
+    uses: <owner>/<templates-repo>/.github/workflows/build.yml@main
     with:
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.sha }}
@@ -66,7 +95,7 @@ on:
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    uses: alexhovy/devops-templates/.github/workflows/deploy.yml@main
+    uses: <owner>/<templates-repo>/.github/workflows/deploy.yml@main
     with:
       deploy_env: prod
       image_name: ${{ github.event.repository.name }}
@@ -120,6 +149,26 @@ permissions:
 ```
 
 Note: avoid defining custom variables or secrets that start with `GITHUB_`, as GitHub reserves that prefix.
+
+## NuGet publish options
+
+Defaults in `.github/workflows/nuget.yml`:
+
+- `dotnet_version`: `8.0.x`
+- `configuration`: `Release`
+- `source_url`: `https://api.nuget.org/v3/index.json`
+
+To publish to GitHub Packages instead of nuget.org:
+
+```yaml
+with:
+  project_path: ./src/<path-to-project>.csproj
+  source_url: https://nuget.pkg.github.com/<owner>/index.json
+  source_username: <github-username>
+secrets:
+  NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+  SOURCE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+```
 
 
 ## Notes

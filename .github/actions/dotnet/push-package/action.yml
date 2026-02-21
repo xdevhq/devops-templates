@@ -1,0 +1,32 @@
+name: Dotnet Push Package
+
+inputs:
+  packages_glob:
+    required: true
+  source_url:
+    required: true
+  api_key:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Push NuGet packages
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        shopt -s nullglob
+        files=( ${{ inputs.packages_glob }} )
+
+        if [ ${#files[@]} -eq 0 ]; then
+          echo "No package files found matching '${{ inputs.packages_glob }}'"
+          exit 1
+        fi
+
+        for file in "${files[@]}"; do
+          dotnet nuget push "${file}" \
+            --source "${{ inputs.source_url }}" \
+            --api-key "${{ inputs.api_key }}" \
+            --skip-duplicate
+        done

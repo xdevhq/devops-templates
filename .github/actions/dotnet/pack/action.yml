@@ -1,0 +1,39 @@
+name: Dotnet Pack
+
+inputs:
+  project_path:
+    required: true
+  configuration:
+    required: false
+    default: Release
+  version:
+    required: false
+    default: ""
+  output_path:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Pack project
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        version="${{ inputs.version }}"
+        output_path="${{ inputs.output_path }}"
+
+        mkdir -p "${output_path}"
+
+        pack_args=(
+          "${{ inputs.project_path }}"
+          -c "${{ inputs.configuration }}"
+          --no-restore
+          -o "${output_path}"
+        )
+
+        if [ -n "${version}" ]; then
+          pack_args+=(/p:PackageVersion="${version}")
+        fi
+
+        dotnet pack "${pack_args[@]}"

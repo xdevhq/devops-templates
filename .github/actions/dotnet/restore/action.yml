@@ -1,0 +1,44 @@
+name: Dotnet Restore
+
+inputs:
+  project_path:
+    required: true
+  source_url:
+    required: false
+    default: ""
+  source_username:
+    required: false
+    default: ""
+  source_password:
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Restore dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        project_path="${{ inputs.project_path }}"
+        source_url="${{ inputs.source_url }}"
+        source_username="${{ inputs.source_username }}"
+        source_password="${{ inputs.source_password }}"
+
+        if [ -n "${source_url}" ] && [ -n "${source_password}" ]; then
+          dotnet nuget remove source external >/dev/null 2>&1 || true
+          nuget_add_args=(
+            "${source_url}"
+            --name external
+            --password "${source_password}"
+            --store-password-in-clear-text
+          )
+          if [ -n "${source_username}" ]; then
+            nuget_add_args+=(--username "${source_username}")
+          fi
+          dotnet nuget add source "${nuget_add_args[@]}"
+          dotnet restore "${project_path}" --source "${source_url}"
+        else
+          dotnet restore "${project_path}"
+        fi
