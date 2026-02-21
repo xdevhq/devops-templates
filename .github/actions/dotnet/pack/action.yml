@@ -15,6 +15,14 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Build project
+      shell: bash
+      run: |
+        set -euo pipefail
+        dotnet build "${{ inputs.project_path }}" \
+          -c "${{ inputs.configuration }}" \
+          --no-restore
+
     - name: Pack project
       shell: bash
       run: |
@@ -28,6 +36,7 @@ runs:
         pack_args=(
           "${{ inputs.project_path }}"
           -c "${{ inputs.configuration }}"
+          --no-build
           --no-restore
           -o "${output_path}"
         )
