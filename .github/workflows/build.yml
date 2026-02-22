@@ -48,7 +48,10 @@ jobs:
           context: ${{ inputs.context }}
           containerfile: ${{ inputs.containerfile }}
           template: ${{ inputs.template }}
-          build_args: ${{ inputs.build_args }}
+          build_args: >-
+            ${{ inputs.build_args }}
+            --build-arg GITHUB_USERNAME=${{ github.actor }}
+            --build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GHCR_TOKEN }}
 
       - name: Tag image for GHCR
         uses: alexhovy/devops-templates/.github/actions/podman/tag-image@main
