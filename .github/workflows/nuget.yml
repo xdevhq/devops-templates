@@ -35,6 +35,9 @@ jobs:
     env:
       NUGET_PUBLISH_SOURCE_URL: ${{ inputs.source_url != '' && inputs.source_url || format('https://nuget.pkg.github.com/{0}/index.json', github.repository_owner) }}
       NUGET_API_KEY_VALUE: ${{ secrets.NUGET_API_KEY != '' && secrets.NUGET_API_KEY || github.token }}
+      NUGET_AUTH_TOKEN: ${{ github.token }}
+      GITHUB_PACKAGES_TOKEN: ${{ github.token }}
+      GITHUB_USERNAME: ${{ github.actor }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
