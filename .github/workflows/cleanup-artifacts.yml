@@ -1,0 +1,53 @@
+name: Cleanup Artifacts
+
+on:
+  workflow_call:
+    inputs:
+      keep_latest_count:
+        required: false
+        type: number
+        default: 20
+      dry_run:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete older workflow artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const keepLatest = Number(${{ inputs.keep_latest_count }});
+            const dryRun = ${{ inputs.dry_run }};
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              { owner, repo, per_page: 100 }
+            );
+
+            artifacts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const toDelete = artifacts.slice(Math.max(0, keepLatest));
+
+            core.info(`Found ${artifacts.length} artifacts. Keeping latest ${keepLatest}. Deleting ${toDelete.length}.`);
+
+            for (const artifact of toDelete) {
+              if (dryRun) {
+                core.info(`[dry-run] Would delete artifact ${artifact.name} (${artifact.id})`);
+                continue;
+              }
+
+              await github.rest.actions.deleteArtifact({
+                owner,
+                repo,
+                artifact_id: artifact.id,
+              });
+              core.info(`Deleted artifact ${artifact.name} (${artifact.id})`);
+            }

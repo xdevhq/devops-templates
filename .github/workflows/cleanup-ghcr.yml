@@ -1,0 +1,31 @@
+name: Cleanup GHCR Container Versions
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        required: true
+        type: string
+      min_versions_to_keep:
+        required: false
+        type: number
+        default: 20
+      delete_only_untagged:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Delete older GHCR versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-type: container
+          package-name: ${{ inputs.package_name }}
+          min-versions-to-keep: ${{ inputs.min_versions_to_keep }}
+          delete-only-untagged-versions: ${{ inputs.delete_only_untagged }}

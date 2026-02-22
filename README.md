@@ -13,6 +13,8 @@ The design is intentionally opinionated and proven across multiple .NET services
 - `.github/workflows/build.yml`: reusable container build + push workflow
 - `.github/workflows/deploy.yml`: reusable Azure Web App deploy workflow
 - `.github/workflows/nuget.yml`: reusable NuGet pack + publish workflow
+- `.github/workflows/cleanup-artifacts.yml`: reusable GitHub Actions artifact cleanup workflow
+- `.github/workflows/cleanup-ghcr.yml`: reusable GHCR version cleanup workflow
 - `.github/actions/*`: small composite actions used by the workflows
 - `.github/containerfiles/*`: template Containerfiles (`node`, `dotnet`)
 
@@ -20,9 +22,19 @@ The design is intentionally opinionated and proven across multiple .NET services
 
 - Build workflow requires consuming repos to set `template` explicitly.
 - Build workflow supports optional `context`, `containerfile`, and `build_args`.
+- Build workflow builds and pushes directly (no image tar artifact upload/download).
 - Deploy workflow is Azure Web App + GHCR focused.
 - NuGet workflow uses the consuming repo's `NuGet.Config` for restore sources.
 - NuGet workflow defaults publish target to GitHub Packages for current owner.
+
+## Storage and retention strategy
+
+- Do not store container image tar files in GitHub Actions artifacts.
+- Treat GHCR as the source of truth for runtime images.
+- Keep a rollback window in GHCR (for example 20 versions), not infinite history.
+- Run scheduled cleanup for:
+  - old GitHub Actions artifacts
+  - old GHCR container versions
 
 ## Quick start: Node container build
 
@@ -131,6 +143,48 @@ NuGet notes:
 - Override publish target via `source_url`.
 - Use `NUGET_API_KEY` only when publishing to feeds that require a non-GitHub token (for example nuget.org).
 
+## Quick start: Cleanup old GitHub Actions artifacts
+
+```yaml
+name: Cleanup Artifacts
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    permissions:
+      actions: write
+      contents: read
+    uses: <owner>/<templates-repo>/.github/workflows/cleanup-artifacts.yml@main
+    with:
+      keep_latest_count: 20
+```
+
+## Quick start: Cleanup old GHCR versions
+
+```yaml
+name: Cleanup GHCR
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    permissions:
+      contents: read
+      packages: write
+    uses: <owner>/<templates-repo>/.github/workflows/cleanup-ghcr.yml@main
+    with:
+      package_name: ${{ github.event.repository.name }}
+      min_versions_to_keep: 20
+      delete_only_untagged: false
+```
+
 ## Required secrets and variables
 
 Build/push:
@@ -146,6 +200,9 @@ Deploy:
 
 NuGet:
 - `NUGET_API_KEY` (optional, only for non-default feeds)
+
+Cleanup:
+- no additional secrets required when using `GITHUB_TOKEN`
 
 ## Reusable workflow contracts
 
@@ -185,6 +242,25 @@ Inputs:
 
 Secrets:
 - `NUGET_API_KEY` (optional)
+
+### `.github/workflows/cleanup-artifacts.yml`
+
+Inputs:
+- `keep_latest_count` (optional, default `20`)
+- `dry_run` (optional, default `false`)
+
+Secrets:
+- none
+
+### `.github/workflows/cleanup-ghcr.yml`
+
+Inputs:
+- `package_name` (required)
+- `min_versions_to_keep` (optional, default `20`)
+- `delete_only_untagged` (optional, default `false`)
+
+Secrets:
+- none
 
 ## Repository access setup
 

@@ -34,7 +34,7 @@ on:
         value: ${{ inputs.image_tag }}
 
 jobs:
-  build_container:
+  build_and_push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
@@ -49,33 +49,6 @@ jobs:
           containerfile: ${{ inputs.containerfile }}
           template: ${{ inputs.template }}
           build_args: ${{ inputs.build_args }}
-
-      - name: Save image as artifact
-        run: |
-          podman save -o /tmp/image.tar "${{ inputs.image_name }}:${{ inputs.image_tag }}"
-
-      - name: Upload image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-${{ inputs.image_name }}-${{ inputs.image_tag }}
-          path: /tmp/image.tar
-
-  push_image:
-    needs: build_container
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Download image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: image-${{ inputs.image_name }}-${{ inputs.image_tag }}
-          path: /tmp
-
-      - name: Load image
-        run: |
-          podman load -i /tmp/image.tar
 
       - name: Tag image for GHCR
         uses: alexhovy/devops-templates/.github/actions/podman/tag-image@main
