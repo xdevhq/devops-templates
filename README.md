@@ -1,30 +1,38 @@
-# Minimal Build + Deploy Pipeline (v0.1)
+# DevOps Templates
 
-This repo provides a small, componentized GitHub Actions build + deploy design for containerized apps deployed to Azure Web App for Containers (Linux). It is intentionally simple and language-agnostic.
+Reusable GitHub Actions templates for:
 
-## How it composes
+- container build + push to GHCR
+- deploy to Azure Web App for Containers
+- NuGet package publish
 
-Entry points → jobs → steps
+The design is intentionally opinionated and proven across multiple .NET services and package repos.
 
-- `.github/workflows/build.yml`: build + push entry point
-- `.github/workflows/deploy.yml`: deploy entry point
-- `.github/workflows/nuget.yml`: NuGet pack + publish entry point
-- `.github/actions/*`: small, single-purpose steps (composite actions)
-- `.github/containerfiles/*`: reusable Containerfile templates used by build steps
+## What this repo provides
 
-Build step expects a template name (e.g., `node`) to select a Containerfile from `.github/containerfiles/<template>/Containerfile`.
+- `.github/workflows/build.yml`: reusable container build + push workflow
+- `.github/workflows/deploy.yml`: reusable Azure Web App deploy workflow
+- `.github/workflows/nuget.yml`: reusable NuGet pack + publish workflow
+- `.github/actions/*`: small composite actions used by the workflows
+- `.github/containerfiles/*`: template Containerfiles (`node`, `dotnet`)
 
-## Required secrets
+## Core behavior
 
-- `GHCR_TOKEN`: for GHCR push (use `${{ secrets.GITHUB_TOKEN }}` from the consuming repo)
-- `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (repo secret)
-- `GHCR_USERNAME`: GitHub username for GHCR pull (repo secret)
-- `GHCR_PASSWORD`: GitHub PAT with `read:packages` for GHCR pull (repo secret)
-- `NUGET_API_KEY` (optional): API key override when publishing outside GitHub Packages
+- Build workflow requires consuming repos to set `template` explicitly.
+- Build workflow supports optional `context`, `containerfile`, and `build_args`.
+- Deploy workflow is Azure Web App + GHCR focused.
+- NuGet workflow uses the consuming repo's `NuGet.Config` for restore sources.
+- NuGet workflow defaults publish target to GitHub Packages for current owner.
 
-## Consume from another repo
+## Quick start: Node container build
 
 ```yaml
+name: Build
+
+on:
+  push:
+    branches: [main]
+
 permissions:
   contents: read
   packages: write
@@ -38,10 +46,9 @@ jobs:
       template: node
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 ```
 
-.NET container build entry point:
+## Quick start: .NET container build
 
 ```yaml
 name: Build
@@ -66,54 +73,18 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Set `APP_PROJECT` to the API project path you want to containerize.
-If your build needs private package feed auth during image build, include auth build args:
-`--build-arg GITHUB_USERNAME=${{ github.actor }} --build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GITHUB_TOKEN }}`.
+Notes:
+- Set `APP_PROJECT` to the .csproj you want containerized.
+- If private feed restore is needed during image build, pass auth build args:
+  - `--build-arg GITHUB_USERNAME=${{ github.actor }}`
+  - `--build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GITHUB_TOKEN }}`
 
-NuGet package entry point:
+## Quick start: Deploy (build once, deploy on success)
 
-```yaml
-name: Publish NuGet
-
-on:
-  push:
-    branches: [main]
-    tags: ["v*"]
-
-jobs:
-  publish:
-    permissions:
-      contents: read
-      packages: write
-    uses: <owner>/<templates-repo>/.github/workflows/nuget.yml@main
-    with:
-      project_path: ./src/<path-to-project>.csproj
-```
-
-Set `project_path` to your repository's `.csproj` path.
-
-Restore source configuration should live in the consuming repo's `NuGet.Config`.
-
-Recommended pattern (build once, deploy many) uses `workflow_run`:
+Use one of the build quick-start workflows above, then add this deploy workflow:
 
 ```yaml
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build:
-    uses: <owner>/<templates-repo>/.github/workflows/build.yml@main
-    with:
-      image_name: ${{ github.event.repository.name }}
-      image_tag: ${{ github.sha }}
-      template: node
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-```yaml
-name: Deploy Prod
+name: Deploy
 
 on:
   workflow_run:
@@ -134,90 +105,104 @@ jobs:
       GHCR_PASSWORD: ${{ secrets.GHCR_PASSWORD }}
 ```
 
-## Environment config in the consuming repo
+## Quick start: NuGet publish
 
-- Create GitHub Environments as needed (e.g., `dev`, `test`, `prod`).
-- Set `AZURE_WEBAPP_NAME` as an environment variable (not secret).
-- Set `AZURE_RESOURCE_GROUP` as an environment variable (not secret).
-- Set `AZURE_CREDENTIALS` as a repo secret (reusable workflows require explicit secrets).
-- To gate production, add required reviewers on the `prod` environment in GitHub.
+```yaml
+name: Publish NuGet
 
-## Template repo access
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
 
-If this repo is private, allow other repos to use its reusable workflows:
-
-- Settings → Actions → General → Access → "Accessible from repositories owned by the user 'username'"
-
-## Get AZURE_CREDENTIALS (service principal JSON)
-
-Use Azure CLI to create a service principal scoped to the target Web App (least privilege).
-
-If you need to sign in with a specific tenant:
-
-```bash
-az login --tenant <TENANT_ID> --use-device-code
+jobs:
+  publish:
+    permissions:
+      contents: read
+      packages: write
+    uses: <owner>/<templates-repo>/.github/workflows/nuget.yml@main
+    with:
+      project_path: ./src/<path-to-project>.csproj
 ```
 
-Generate the Azure Credentials:
+NuGet notes:
+- Restore source policy should live in the consuming repo `NuGet.Config`.
+- Default publish target is GitHub Packages owner feed.
+- Override publish target via `source_url`.
+- Use `NUGET_API_KEY` only when publishing to feeds that require a non-GitHub token (for example nuget.org).
+
+## Required secrets and variables
+
+Build/push:
+- `GHCR_TOKEN` (usually `${{ secrets.GITHUB_TOKEN }}` in consuming repo)
+
+Deploy:
+- `AZURE_CREDENTIALS`
+- `GHCR_USERNAME`
+- `GHCR_PASSWORD`
+- environment variables in consuming repo environment:
+  - `AZURE_WEBAPP_NAME`
+  - `AZURE_RESOURCE_GROUP`
+
+NuGet:
+- `NUGET_API_KEY` (optional, only for non-default feeds)
+
+## Reusable workflow contracts
+
+### `.github/workflows/build.yml`
+
+Inputs:
+- `image_name` (required)
+- `image_tag` (required)
+- `template` (required)
+- `context` (optional, default `.`)
+- `containerfile` (optional, default `Containerfile`)
+- `build_args` (optional, default empty)
+
+Secrets:
+- `GHCR_TOKEN` (required)
+
+### `.github/workflows/deploy.yml`
+
+Inputs:
+- `deploy_env` (required)
+- `image_name` (required)
+- `image_tag` (required)
+
+Secrets:
+- `AZURE_CREDENTIALS` (required)
+- `GHCR_USERNAME` (required)
+- `GHCR_PASSWORD` (required)
+
+### `.github/workflows/nuget.yml`
+
+Inputs:
+- `project_path` (required)
+- `dotnet_version` (optional, default `8.0.x`)
+- `configuration` (optional, default `Release`)
+- `package_version` (optional)
+- `source_url` (optional publish target override)
+
+Secrets:
+- `NUGET_API_KEY` (optional)
+
+## Repository access setup
+
+If this templates repo is private, allow other repos to call its reusable workflows:
+
+- Settings -> Actions -> General -> Access
+- Enable access from the repositories that will consume these templates
+
+## Azure credentials helper
+
+Create a service principal scoped to a Web App:
 
 ```bash
 az ad sp create-for-rbac --name "gh-actions-webapp-deploy" --role "Contributor" --scopes "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Web/sites/<WEBAPP_NAME>" --query "{clientId:appId, clientSecret:password, tenantId:tenant, subscriptionId:'<SUB_ID>'}" --output json > azure-credentials.json
 ```
 
-Save the JSON as the `AZURE_CREDENTIALS` repo secret.
+Store the JSON as `AZURE_CREDENTIALS` secret in the consuming repo.
 
-## GITHUB_TOKEN (GHCR push)
+## Guiding principle
 
-`GITHUB_TOKEN` is automatically provided by GitHub Actions. Ensure the consuming repo’s workflow has permissions to write packages:
-
-```yaml
-permissions:
-  contents: read
-  packages: write
-```
-
-Note: avoid defining custom variables or secrets that start with `GITHUB_`, as GitHub reserves that prefix.
-
-## NuGet publish options
-
-Defaults in `.github/workflows/nuget.yml`:
-
-- `dotnet_version`: `8.0.x`
-- `configuration`: `Release`
-- restore sources: from consuming repo `NuGet.Config`
-- `source_url`: publish target; defaults to GitHub Packages for the current repository owner (`https://nuget.pkg.github.com/<owner>/index.json`)
-- publish token: `${{ github.token }}`
-
-To publish to nuget.org instead of GitHub Packages:
-
-```yaml
-with:
-  project_path: ./src/<path-to-project>.csproj
-  source_url: https://api.nuget.org/v3/index.json
-secrets:
-  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-```
-
-To publish to a custom private feed:
-
-```yaml
-with:
-  project_path: ./src/<path-to-project>.csproj
-  source_url: https://<feed-url>/v3/index.json
-secrets:
-  NUGET_API_KEY: ${{ secrets.<feed-api-key> }}
-```
-
-
-## Notes
-
-- This is a minimal, design-focused layout. GitHub Actions only loads workflows from `.github/workflows`, and composite actions require an `action.yml` inside a directory.
-- Podman is used for build/tag/push. No Docker.
-- Azure logic is isolated to deploy components.
-- `.github/workflows/build.yml` now supports `template`, `context`, `containerfile`, and `build_args` for template-specific image builds.
-- `.github/workflows/build.yml` requires `template` to be set by the consuming workflow.
-- `.github/containerfiles/dotnet/Containerfile` supports `APP_PROJECT` and optional auth args (`NUGET_AUTH_TOKEN`, `GITHUB_PACKAGES_TOKEN`, `GITHUB_USERNAME`) for private feed restores.
-
-## Guiding sentence
-
-This pipeline should feel boring, obvious, and easy to extend.
+Keep workflows boring, explicit, and easy to extend.
