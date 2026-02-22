@@ -9,6 +9,21 @@ on:
       image_tag:
         required: true
         type: string
+      template:
+        required: true
+        type: string
+      context:
+        required: false
+        type: string
+        default: "."
+      containerfile:
+        required: false
+        type: string
+        default: Containerfile
+      build_args:
+        required: false
+        type: string
+        default: ""
     secrets:
       GHCR_TOKEN:
         required: true
@@ -30,7 +45,10 @@ jobs:
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
-          template: node
+          context: ${{ inputs.context }}
+          containerfile: ${{ inputs.containerfile }}
+          template: ${{ inputs.template }}
+          build_args: ${{ inputs.build_args }}
 
       - name: Save image as artifact
         run: |

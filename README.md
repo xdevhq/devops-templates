@@ -35,10 +35,40 @@ jobs:
     with:
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.sha }}
+      template: node
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ```
+
+.NET container build entry point:
+
+```yaml
+name: Build
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    uses: <owner>/<templates-repo>/.github/workflows/build.yml@main
+    with:
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}
+      template: dotnet
+      build_args: --build-arg APP_PROJECT=src/<path-to-api>.csproj
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Set `APP_PROJECT` to the API project path you want to containerize.
+If your build needs private package feed auth during image build, include auth build args:
+`--build-arg GITHUB_USERNAME=${{ github.actor }} --build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GITHUB_TOKEN }}`.
 
 NuGet package entry point:
 
@@ -77,6 +107,7 @@ jobs:
     with:
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.sha }}
+      template: node
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -183,6 +214,9 @@ secrets:
 - This is a minimal, design-focused layout. GitHub Actions only loads workflows from `.github/workflows`, and composite actions require an `action.yml` inside a directory.
 - Podman is used for build/tag/push. No Docker.
 - Azure logic is isolated to deploy components.
+- `.github/workflows/build.yml` now supports `template`, `context`, `containerfile`, and `build_args` for template-specific image builds.
+- `.github/workflows/build.yml` requires `template` to be set by the consuming workflow.
+- `.github/containerfiles/dotnet/Containerfile` supports `APP_PROJECT` and optional auth args (`NUGET_AUTH_TOKEN`, `GITHUB_PACKAGES_TOKEN`, `GITHUB_USERNAME`) for private feed restores.
 
 ## Guiding sentence
 
