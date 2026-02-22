@@ -23,9 +23,9 @@ runs:
         az webapp config container set \
           --name "${{ inputs.azure_webapp_name }}" \
           --resource-group "${{ inputs.azure_resource_group }}" \
-          --docker-registry-server-url "https://ghcr.io" \
-          --docker-registry-server-user "${{ inputs.ghcr_username }}" \
-          --docker-registry-server-password "${{ inputs.ghcr_password }}"
+          --container-registry-url "https://ghcr.io" \
+          --container-registry-user "${{ inputs.ghcr_username }}" \
+          --container-registry-password "${{ inputs.ghcr_password }}"
 
     - name: Deploy container image
       uses: azure/webapps-deploy@v3
