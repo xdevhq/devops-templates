@@ -20,8 +20,8 @@ Build step expects a template name (e.g., `node`) to select a Containerfile from
 - `AZURE_CREDENTIALS`: Azure service principal JSON for `azure/login` (repo secret)
 - `GHCR_USERNAME`: GitHub username for GHCR pull (repo secret)
 - `GHCR_PASSWORD`: GitHub PAT with `read:packages` for GHCR pull (repo secret)
-- `NUGET_API_KEY`: API key used by `.github/workflows/nuget.yml` to publish packages
-- `SOURCE_PASSWORD` (optional): password/PAT for private NuGet feed restore
+- `NUGET_API_KEY` (optional): API key override when publishing outside GitHub Packages
+- `SOURCE_PASSWORD` (optional): password/PAT override for private feed restore
 
 ## Consume from another repo
 
@@ -59,10 +59,6 @@ jobs:
     uses: <owner>/<templates-repo>/.github/workflows/nuget.yml@main
     with:
       project_path: ./src/<path-to-project>.csproj
-      package_version: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
-      source_url: https://api.nuget.org/v3/index.json
-    secrets:
-      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 ```
 
 Set `project_path` to your repository's `.csproj` path.
@@ -156,18 +152,30 @@ Defaults in `.github/workflows/nuget.yml`:
 
 - `dotnet_version`: `8.0.x`
 - `configuration`: `Release`
-- `source_url`: `https://api.nuget.org/v3/index.json`
+- `source_url`: GitHub Packages for the current repository owner (`https://nuget.pkg.github.com/<owner>/index.json`)
+- `source_username`: `${{ github.actor }}`
+- publish/restore token: `${{ github.token }}`
 
-To publish to GitHub Packages instead of nuget.org:
+To publish to nuget.org instead of GitHub Packages:
 
 ```yaml
 with:
   project_path: ./src/<path-to-project>.csproj
-  source_url: https://nuget.pkg.github.com/<owner>/index.json
-  source_username: <github-username>
+  source_url: https://api.nuget.org/v3/index.json
 secrets:
-  NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-  SOURCE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+```
+
+To publish to a custom private feed:
+
+```yaml
+with:
+  project_path: ./src/<path-to-project>.csproj
+  source_url: https://<feed-url>/v3/index.json
+  source_username: <feed-username>
+secrets:
+  NUGET_API_KEY: ${{ secrets.<feed-api-key> }}
+  SOURCE_PASSWORD: ${{ secrets.<feed-password> }}
 ```
 
 

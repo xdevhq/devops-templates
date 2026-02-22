@@ -21,14 +21,14 @@ on:
       source_url:
         required: false
         type: string
-        default: "https://api.nuget.org/v3/index.json"
+        default: ""
       source_username:
         required: false
         type: string
         default: ""
     secrets:
       NUGET_API_KEY:
-        required: true
+        required: false
       SOURCE_PASSWORD:
         required: false
 
@@ -38,6 +38,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      NUGET_SOURCE_URL: ${{ inputs.source_url != '' && inputs.source_url || format('https://nuget.pkg.github.com/{0}/index.json', github.repository_owner) }}
+      NUGET_SOURCE_USERNAME: ${{ inputs.source_username != '' && inputs.source_username || github.actor }}
+      NUGET_SOURCE_PASSWORD: ${{ secrets.SOURCE_PASSWORD != '' && secrets.SOURCE_PASSWORD || github.token }}
+      NUGET_API_KEY_VALUE: ${{ secrets.NUGET_API_KEY != '' && secrets.NUGET_API_KEY || github.token }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -51,9 +56,9 @@ jobs:
         uses: alexhovy/devops-templates/.github/actions/dotnet/restore@main
         with:
           project_path: ${{ inputs.project_path }}
-          source_url: ${{ inputs.source_url }}
-          source_username: ${{ inputs.source_username }}
-          source_password: ${{ secrets.SOURCE_PASSWORD }}
+          source_url: ${{ env.NUGET_SOURCE_URL }}
+          source_username: ${{ env.NUGET_SOURCE_USERNAME }}
+          source_password: ${{ env.NUGET_SOURCE_PASSWORD }}
 
       - name: Pack NuGet package
         uses: alexhovy/devops-templates/.github/actions/dotnet/pack@main
@@ -67,5 +72,5 @@ jobs:
         uses: alexhovy/devops-templates/.github/actions/dotnet/push-package@main
         with:
           packages_glob: ./artifacts/nuget/*.nupkg
-          source_url: ${{ inputs.source_url }}
-          api_key: ${{ secrets.NUGET_API_KEY }}
+          source_url: ${{ env.NUGET_SOURCE_URL }}
+          api_key: ${{ env.NUGET_API_KEY_VALUE }}
