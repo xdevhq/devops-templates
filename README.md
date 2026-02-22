@@ -21,7 +21,6 @@ Build step expects a template name (e.g., `node`) to select a Containerfile from
 - `GHCR_USERNAME`: GitHub username for GHCR pull (repo secret)
 - `GHCR_PASSWORD`: GitHub PAT with `read:packages` for GHCR pull (repo secret)
 - `NUGET_API_KEY` (optional): API key override when publishing outside GitHub Packages
-- `SOURCE_PASSWORD` (optional): password/PAT override for private feed restore
 
 ## Consume from another repo
 
@@ -62,6 +61,8 @@ jobs:
 ```
 
 Set `project_path` to your repository's `.csproj` path.
+
+Restore source configuration should live in the consuming repo's `NuGet.Config`.
 
 Recommended pattern (build once, deploy many) uses `workflow_run`:
 
@@ -152,9 +153,9 @@ Defaults in `.github/workflows/nuget.yml`:
 
 - `dotnet_version`: `8.0.x`
 - `configuration`: `Release`
-- `source_url`: GitHub Packages for the current repository owner (`https://nuget.pkg.github.com/<owner>/index.json`)
-- `source_username`: `${{ github.actor }}`
-- publish/restore token: `${{ github.token }}`
+- restore sources: from consuming repo `NuGet.Config`
+- `source_url`: publish target; defaults to GitHub Packages for the current repository owner (`https://nuget.pkg.github.com/<owner>/index.json`)
+- publish token: `${{ github.token }}`
 
 To publish to nuget.org instead of GitHub Packages:
 
@@ -172,10 +173,8 @@ To publish to a custom private feed:
 with:
   project_path: ./src/<path-to-project>.csproj
   source_url: https://<feed-url>/v3/index.json
-  source_username: <feed-username>
 secrets:
   NUGET_API_KEY: ${{ secrets.<feed-api-key> }}
-  SOURCE_PASSWORD: ${{ secrets.<feed-password> }}
 ```
 
 
