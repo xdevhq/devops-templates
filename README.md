@@ -80,13 +80,14 @@ jobs:
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.sha }}
       template: dotnet
-      build_args: --build-arg APP_PROJECT=src/<path-to-api>.csproj
+      build_args: --build-arg APP_PROJECT=src/<path-to-api>.csproj --build-arg APP_DLL=<app-name>.dll
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Notes:
 - Set `APP_PROJECT` to the .csproj you want containerized.
+- Set `APP_DLL` to the published app assembly name (for example `Platform.Gateway.Api.dll`).
 - If private feed restore is needed during image build, pass auth build args:
   - `--build-arg GITHUB_USERNAME=${{ github.actor }}`
   - `--build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GITHUB_TOKEN }}`
