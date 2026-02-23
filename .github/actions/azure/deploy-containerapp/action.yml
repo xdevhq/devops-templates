@@ -43,3 +43,5 @@ runs:
           --name "${{ inputs.azure_containerapp_name }}" \
           --resource-group "${{ inputs.azure_resource_group }}" \
           --image "ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"
+          --set configuration.ingress.targetPort=8080 \
+          --set-env-vars PORT=8080
