@@ -22,11 +22,14 @@ FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS runtime
 ARG APP_DLL
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:80
-EXPOSE 80
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+RUN addgroup --system app && adduser --system --ingroup app appuser
 
 COPY --from=build /app/publish ./
 
 RUN test -n "${APP_DLL}" && ln -sf "/app/${APP_DLL}" /app/app.dll
 
+USER appuser
 ENTRYPOINT ["dotnet", "/app/app.dll"]
