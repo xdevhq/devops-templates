@@ -108,6 +108,7 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: <owner>/<templates-repo>/.github/workflows/deploy.yml@main
+    secrets: inherit
     with:
       deploy_env: prod
       image_name: ${{ github.event.repository.name }}
@@ -188,6 +189,7 @@ Build/push:
 - `GHCR_TOKEN` (usually `${{ secrets.GITHUB_TOKEN }}` in consuming repo)
 
 Deploy:
+- Caller workflow must include `secrets: inherit` when invoking the reusable deploy workflow
 - environment secrets in consuming repo environment:
   - `AZURE_CREDENTIALS`
   - `GHCR_USERNAME`
@@ -225,7 +227,7 @@ Inputs:
 - `image_tag` (required)
 
 Secrets:
-- none (deploy uses environment secrets on the selected `deploy_env`)
+- none in `workflow_call` contract (caller should use `secrets: inherit`)
 
 ### `.github/workflows/nuget.yml`
 
