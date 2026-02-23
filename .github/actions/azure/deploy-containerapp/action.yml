@@ -1,0 +1,45 @@
+name: Azure Container App Deploy
+
+author: alexhovy
+
+description: Configure GHCR registry credentials and deploy an image to Azure Container Apps.
+
+inputs:
+  azure_containerapp_name:
+    required: true
+  azure_resource_group:
+    required: true
+  image_name:
+    required: true
+  image_tag:
+    required: true
+  ghcr_username:
+    required: true
+  ghcr_password:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Enable dynamic Azure CLI extension install
+      shell: bash
+      run: |
+        az config set extension.use_dynamic_install=yes_without_prompt
+
+    - name: Configure GHCR registry credentials
+      shell: bash
+      run: |
+        az containerapp registry set \
+          --name "${{ inputs.azure_containerapp_name }}" \
+          --resource-group "${{ inputs.azure_resource_group }}" \
+          --server "ghcr.io" \
+          --username "${{ inputs.ghcr_username }}" \
+          --password "${{ inputs.ghcr_password }}"
+
+    - name: Deploy container image
+      shell: bash
+      run: |
+        az containerapp update \
+          --name "${{ inputs.azure_containerapp_name }}" \
+          --resource-group "${{ inputs.azure_resource_group }}" \
+          --image "ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"

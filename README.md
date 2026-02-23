@@ -3,7 +3,7 @@
 Reusable GitHub Actions templates for:
 
 - container build + push to GHCR
-- deploy to Azure Web App for Containers
+- deploy to Azure Web App for Containers or Azure Container Apps
 - NuGet package publish
 
 The design is intentionally opinionated and proven across multiple .NET services and package repos.
@@ -11,7 +11,7 @@ The design is intentionally opinionated and proven across multiple .NET services
 ## What this repo provides
 
 - `.github/workflows/build.yml`: reusable container build + push workflow
-- `.github/workflows/deploy.yml`: reusable Azure Web App deploy workflow
+- `.github/workflows/deploy.yml`: reusable Azure container deploy workflow (Web App or Container Apps)
 - `.github/workflows/nuget.yml`: reusable NuGet pack + publish workflow
 - `.github/workflows/cleanup-artifacts.yml`: reusable GitHub Actions artifact cleanup workflow
 - `.github/workflows/cleanup-ghcr.yml`: reusable GHCR version cleanup workflow
@@ -23,7 +23,7 @@ The design is intentionally opinionated and proven across multiple .NET services
 - Build workflow requires consuming repos to set `template` explicitly.
 - Build workflow supports optional `context`, `containerfile`, and `build_args`.
 - Build workflow builds and pushes directly (no image tar artifact upload/download).
-- Deploy workflow is Azure Web App + GHCR focused.
+- Deploy workflow supports Azure Web App for Containers and Azure Container Apps (both with GHCR images).
 - NuGet workflow uses the consuming repo's `NuGet.Config` for restore sources.
 - NuGet workflow defaults publish target to GitHub Packages for current owner.
 
@@ -111,9 +111,14 @@ jobs:
     secrets: inherit
     with:
       deploy_env: prod
+      deploy_target: webapp
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.event.workflow_run.head_sha }}
 ```
+
+Set `deploy_target` to:
+- `webapp` (default): requires `AZURE_WEBAPP_NAME`
+- `containerapp`: requires `AZURE_CONTAINERAPP_NAME`
 
 ## Quick start: NuGet publish
 
@@ -196,7 +201,8 @@ Deploy:
   - `GHCR_USERNAME`
   - `GHCR_PASSWORD`
 - environment variables in consuming repo environment:
-  - `AZURE_WEBAPP_NAME`
+  - `AZURE_WEBAPP_NAME` (for `deploy_target: webapp`)
+  - `AZURE_CONTAINERAPP_NAME` (for `deploy_target: containerapp`)
   - `AZURE_RESOURCE_GROUP`
 
 NuGet:
@@ -224,6 +230,7 @@ Secrets:
 
 Inputs:
 - `deploy_env` (required)
+- `deploy_target` (optional, default `webapp`; allowed values: `webapp`, `containerapp`)
 - `image_name` (required)
 - `image_tag` (required)
 
@@ -327,9 +334,11 @@ Store one `AZURE_CREDENTIALS` secret per GitHub Environment:
 For each target, set in that GitHub Environment:
 
 - secret: `AZURE_CREDENTIALS`
-- vars: `AZURE_WEBAPP_NAME`, `AZURE_RESOURCE_GROUP`
+- vars: `AZURE_RESOURCE_GROUP` and one of:
+  - `AZURE_WEBAPP_NAME` (for Web App deploy target)
+  - `AZURE_CONTAINERAPP_NAME` (for Container Apps deploy target)
 
-RBAC note: all secrets on the same App Registration represent the same identity and permissions. Grant RBAC access for all target Web Apps (or at resource group scope). If you need different permissions per app/environment, use separate service principals. If targets are across different tenants, use separate identities per tenant.
+RBAC note: all secrets on the same App Registration represent the same identity and permissions. Grant RBAC access for all target resources (Web Apps and/or Container Apps, or at resource group scope). If you need different permissions per app/environment, use separate service principals. If targets are across different tenants, use separate identities per tenant.
 
 ## Guiding principle
 
