@@ -12,13 +12,6 @@ on:
       image_tag:
         required: true
         type: string
-    secrets:
-      AZURE_CREDENTIALS:
-        required: true
-      GHCR_USERNAME:
-        required: true
-      GHCR_PASSWORD:
-        required: true
 
 jobs:
   deploy_webapp:

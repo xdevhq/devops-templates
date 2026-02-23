@@ -112,10 +112,6 @@ jobs:
       deploy_env: prod
       image_name: ${{ github.event.repository.name }}
       image_tag: ${{ github.event.workflow_run.head_sha }}
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_PROD }}
-      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-      GHCR_PASSWORD: ${{ secrets.GHCR_PASSWORD }}
 ```
 
 ## Quick start: NuGet publish
@@ -192,9 +188,10 @@ Build/push:
 - `GHCR_TOKEN` (usually `${{ secrets.GITHUB_TOKEN }}` in consuming repo)
 
 Deploy:
-- `AZURE_CREDENTIALS`
-- `GHCR_USERNAME`
-- `GHCR_PASSWORD`
+- environment secrets in consuming repo environment:
+  - `AZURE_CREDENTIALS`
+  - `GHCR_USERNAME`
+  - `GHCR_PASSWORD`
 - environment variables in consuming repo environment:
   - `AZURE_WEBAPP_NAME`
   - `AZURE_RESOURCE_GROUP`
@@ -228,9 +225,7 @@ Inputs:
 - `image_tag` (required)
 
 Secrets:
-- `AZURE_CREDENTIALS` (required)
-- `GHCR_USERNAME` (required)
-- `GHCR_PASSWORD` (required)
+- none (deploy uses environment secrets on the selected `deploy_env`)
 
 ### `.github/workflows/nuget.yml`
 
@@ -278,7 +273,7 @@ Create a service principal scoped to a Web App:
 az ad sp create-for-rbac --name "gh-actions-webapp-deploy" --role "Contributor" --scopes "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Web/sites/<WEBAPP_NAME>" --query "{clientId:appId, clientSecret:password, tenantId:tenant, subscriptionId:'<SUB_ID>'}" --output json > azure-credentials.json
 ```
 
-Store the JSON as `AZURE_CREDENTIALS` secret in the consuming repo.
+Store the JSON as `AZURE_CREDENTIALS` secret in each consuming GitHub Environment used for deploys.
 
 ## Guiding principle
 
