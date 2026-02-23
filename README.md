@@ -190,8 +190,9 @@ Build/push:
 
 Deploy:
 - Caller workflow must include `secrets: inherit` when invoking the reusable deploy workflow
-- environment secrets in consuming repo environment:
+- environment secret in consuming repo environment:
   - `AZURE_CREDENTIALS`
+- repository-level or environment-level secrets (consuming repo):
   - `GHCR_USERNAME`
   - `GHCR_PASSWORD`
 - environment variables in consuming repo environment:
@@ -269,13 +270,66 @@ If this templates repo is private, allow other repos to call its reusable workfl
 
 ## Azure credentials helper
 
-Create a service principal scoped to a Web App:
+Recommended baseline:
+
+- scope RBAC at resource group level (or narrower) where possible
+- create one `AZURE_CREDENTIALS` secret per GitHub Environment (target)
+
+Create the App Registration / service principal once:
 
 ```bash
-az ad sp create-for-rbac --name "gh-actions-webapp-deploy" --role "Contributor" --scopes "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Web/sites/<WEBAPP_NAME>" --query "{clientId:appId, clientSecret:password, tenantId:tenant, subscriptionId:'<SUB_ID>'}" --output json > azure-credentials.json
+az ad app create \
+  --display-name "sp-gha-deploy-<ENV_GROUP>" \
+  --query appId \
+  --output tsv
 ```
 
-Store the JSON as `AZURE_CREDENTIALS` secret in each consuming GitHub Environment used for deploys.
+```bash
+az ad sp create \
+  --id "<APP_ID>"
+```
+
+```bash
+az account show \
+  --query tenantId \
+  --output tsv
+```
+
+Use `appId` as `<APP_ID>`. Then assign RBAC per target subscription/resource group:
+
+```bash
+az role assignment create \
+  --assignee "<APP_ID>" \
+  --role "Contributor" \
+  --scope "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>"
+```
+
+Repeat the role assignment command for each target scope.
+
+Create one `AZURE_CREDENTIALS` JSON value per deployment target by running this command once per target:
+
+```bash
+az ad app credential reset \
+  --id "<APP_ID>" \
+  --append \
+  --display-name "github-<RG>" \
+  --years 1 \
+  --query "{clientId:'<APP_ID>',clientSecret:password,subscriptionId:'<SUB_ID>',tenantId:'<TENANT_ID>'}" \
+  --output json
+```
+
+Store one `AZURE_CREDENTIALS` secret per GitHub Environment:
+
+```json
+{"clientId":"<APP_ID>","clientSecret":"<SECRET_FROM_COMMAND>","subscriptionId":"<SUB_ID>","tenantId":"<TENANT_ID>"}
+```
+
+For each target, set in that GitHub Environment:
+
+- secret: `AZURE_CREDENTIALS`
+- vars: `AZURE_WEBAPP_NAME`, `AZURE_RESOURCE_GROUP`
+
+RBAC note: all secrets on the same App Registration represent the same identity and permissions. Grant RBAC access for all target Web Apps (or at resource group scope). If you need different permissions per app/environment, use separate service principals. If targets are across different tenants, use separate identities per tenant.
 
 ## Guiding principle
 
