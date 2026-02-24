@@ -120,6 +120,13 @@ Set `deploy_target` to:
 - `webapp` (default): requires `AZURE_WEBAPP_NAME`
 - `containerapp`: requires `AZURE_CONTAINERAPP_NAME`
 
+Optional deploy override:
+- `container_port`: defaults to `8080`; override when the app listens on a different port. Applied to the selected target (`WEBSITES_PORT` for Web App, ingress `targetPort` for Container Apps)
+
+Template defaults:
+- `.github/containerfiles/node/Containerfile` runs as non-root (`appuser`) and uses port `8080`
+- `.github/containerfiles/dotnet/Containerfile` runs as non-root (`appuser`) and uses port `8080`
+
 ## Quick start: NuGet publish
 
 ```yaml
@@ -233,6 +240,7 @@ Inputs:
 - `deploy_target` (optional, default `webapp`; allowed values: `webapp`, `containerapp`)
 - `image_name` (required)
 - `image_tag` (required)
+- `container_port` (optional, default `8080`)
 
 Secrets:
 - none in `workflow_call` contract (caller should use `secrets: inherit`)

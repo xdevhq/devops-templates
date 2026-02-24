@@ -9,6 +9,9 @@ inputs:
     required: true
   image_tag:
     required: true
+  container_port:
+    required: false
+    default: "8080"
   ghcr_username:
     required: true
   ghcr_password:
@@ -32,3 +35,11 @@ runs:
       with:
         app-name: ${{ inputs.azure_webapp_name }}
         images: ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
+
+    - name: Set Web App container port
+      shell: bash
+      run: |
+        az webapp config appsettings set \
+          --name "${{ inputs.azure_webapp_name }}" \
+          --resource-group "${{ inputs.azure_resource_group }}" \
+          --settings WEBSITES_PORT="${{ inputs.container_port }}"

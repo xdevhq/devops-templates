@@ -13,6 +13,9 @@ inputs:
     required: true
   image_tag:
     required: true
+  container_port:
+    required: false
+    default: "8080"
   ghcr_username:
     required: true
   ghcr_password:
@@ -39,9 +42,13 @@ runs:
     - name: Deploy container image
       shell: bash
       run: |
-        az containerapp update \
-          --name "${{ inputs.azure_containerapp_name }}" \
-          --resource-group "${{ inputs.azure_resource_group }}" \
-          --image "ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}" \
-          --set configuration.ingress.targetPort=8080 \
-          --set-env-vars PORT=8080
+        CMD=(
+          az containerapp update
+          --name "${{ inputs.azure_containerapp_name }}"
+          --resource-group "${{ inputs.azure_resource_group }}"
+          --image "ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}:${{ inputs.image_tag }}"
+        )
+
+        CMD+=(--set "configuration.ingress.targetPort=${{ inputs.container_port }}")
+
+        "${CMD[@]}"
