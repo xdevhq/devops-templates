@@ -1,0 +1,125 @@
+name: NPM Package
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        required: false
+        type: string
+        default: "20"
+      package_path:
+        required: true
+        type: string
+      package_manager:
+        required: false
+        type: string
+        default: auto
+      registry_url:
+        required: false
+        type: string
+        default: "https://npm.pkg.github.com"
+      run_lint:
+        required: false
+        type: boolean
+        default: true
+      run_test:
+        required: false
+        type: boolean
+        default: true
+      run_typecheck:
+        required: false
+        type: boolean
+        default: true
+      run_build:
+        required: false
+        type: boolean
+        default: true
+      publish:
+        required: false
+        type: boolean
+        default: true
+      dry_run:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      NPM_TOKEN:
+        required: false
+    outputs:
+      package_name:
+        value: ${{ jobs.package.outputs.package_name }}
+      package_version:
+        value: ${{ jobs.package.outputs.package_version }}
+      package_manager:
+        value: ${{ jobs.package.outputs.package_manager }}
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN != '' && secrets.NPM_TOKEN || github.token }}
+      NPM_CONFIG_USERCONFIG: ${{ github.workspace }}/.npmrc
+    outputs:
+      package_name: ${{ steps.publish.outputs.package_name }}
+      package_version: ${{ steps.publish.outputs.package_version }}
+      package_manager: ${{ steps.install.outputs.package_manager }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Install dependencies
+        id: install
+        uses: alexhovy/devops-templates/.github/actions/node/install@main
+        with:
+          package_path: ${{ inputs.package_path }}
+          package_manager: ${{ inputs.package_manager }}
+
+      - name: Run lint
+        if: ${{ inputs.run_lint }}
+        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        with:
+          package_path: ${{ inputs.package_path }}
+          package_manager: ${{ steps.install.outputs.package_manager }}
+          script_name: lint
+
+      - name: Run tests
+        if: ${{ inputs.run_test }}
+        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        with:
+          package_path: ${{ inputs.package_path }}
+          package_manager: ${{ steps.install.outputs.package_manager }}
+          script_name: test
+
+      - name: Run typecheck
+        if: ${{ inputs.run_typecheck }}
+        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        with:
+          package_path: ${{ inputs.package_path }}
+          package_manager: ${{ steps.install.outputs.package_manager }}
+          script_name: typecheck
+
+      - name: Run build
+        if: ${{ inputs.run_build }}
+        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        with:
+          package_path: ${{ inputs.package_path }}
+          package_manager: ${{ steps.install.outputs.package_manager }}
+          script_name: build
+
+      - name: Publish package
+        id: publish
+        if: ${{ inputs.publish }}
+        uses: alexhovy/devops-templates/.github/actions/node/publish-package@main
+        with:
+          package_path: ${{ inputs.package_path }}
+          package_manager: ${{ steps.install.outputs.package_manager }}
+          registry_url: ${{ inputs.registry_url }}
+          dry_run: ${{ inputs.dry_run }}

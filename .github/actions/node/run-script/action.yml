@@ -1,0 +1,46 @@
+name: Node Run Script
+
+description: Run a package.json script only when it exists.
+
+inputs:
+  package_path:
+    required: true
+  package_manager:
+    required: true
+  script_name:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run script when present
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        package_path="${{ inputs.package_path }}"
+        manager="${{ inputs.package_manager }}"
+        script_name="${{ inputs.script_name }}"
+
+        cd "${package_path}"
+
+        if ! node -e "const pkg=require('./package.json'); process.exit(pkg.scripts && pkg.scripts['${script_name}'] ? 0 : 1)"; then
+          echo "Skipping '${script_name}' because it is not defined in package.json"
+          exit 0
+        fi
+
+        case "${manager}" in
+          pnpm)
+            pnpm run "${script_name}"
+            ;;
+          yarn)
+            yarn "${script_name}"
+            ;;
+          npm)
+            npm run "${script_name}"
+            ;;
+          *)
+            echo "Unsupported package_manager '${manager}'"
+            exit 1
+            ;;
+        esac

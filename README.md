@@ -5,6 +5,7 @@ Reusable GitHub Actions templates for:
 - container build + push to GHCR
 - deploy to Azure Web App for Containers or Azure Container Apps
 - NuGet package publish
+- npm package publish (GitHub Packages)
 
 The design is intentionally opinionated and proven across multiple .NET services and package repos.
 
@@ -13,6 +14,7 @@ The design is intentionally opinionated and proven across multiple .NET services
 - `.github/workflows/build.yml`: reusable container build + push workflow
 - `.github/workflows/deploy.yml`: reusable Azure container deploy workflow (Web App or Container Apps)
 - `.github/workflows/nuget.yml`: reusable NuGet pack + publish workflow
+- `.github/workflows/npm.yml`: reusable npm package publish workflow
 - `.github/workflows/cleanup-artifacts.yml`: reusable GitHub Actions artifact cleanup workflow
 - `.github/workflows/cleanup-ghcr.yml`: reusable GHCR version cleanup workflow
 - `.github/actions/*`: small composite actions used by the workflows
@@ -26,6 +28,8 @@ The design is intentionally opinionated and proven across multiple .NET services
 - Deploy workflow supports Azure Web App for Containers and Azure Container Apps (both with GHCR images).
 - NuGet workflow uses the consuming repo's `NuGet.Config` for restore sources.
 - NuGet workflow defaults publish target to GitHub Packages for current owner.
+- npm workflow uses the consuming repo's `.npmrc` for registry/auth policy.
+- npm workflow defaults publish target to GitHub Packages.
 
 ## Storage and retention strategy
 
@@ -153,6 +157,41 @@ NuGet notes:
 - Override publish target via `source_url`.
 - Use `NUGET_API_KEY` only when publishing to feeds that require a non-GitHub token (for example nuget.org).
 
+## Quick start: npm publish
+
+```yaml
+name: Publish NPM
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  publish:
+    permissions:
+      contents: read
+      packages: write
+    uses: <owner>/<templates-repo>/.github/workflows/npm.yml@main
+    with:
+      package_path: .
+      package_manager: pnpm
+```
+
+npm notes:
+- Keep registry/auth policy in the consuming repo `.npmrc` (same model as `NuGet.Config`).
+- Default publish target is GitHub Packages (`https://npm.pkg.github.com`).
+- Version is read from the consuming repo `package.json`.
+- `NPM_TOKEN` is optional for GitHub Packages (workflow falls back to `GITHUB_TOKEN`).
+
+Example `.npmrc` for consuming repos:
+
+```ini
+@platform:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+always-auth=true
+```
+
 ## Quick start: Cleanup old GitHub Actions artifacts
 
 ```yaml
@@ -215,6 +254,9 @@ Deploy:
 NuGet:
 - `NUGET_API_KEY` (optional, only for non-default feeds)
 
+npm:
+- `NPM_TOKEN` (optional; defaults to `GITHUB_TOKEN` for GitHub Packages)
+
 Cleanup:
 - no additional secrets required when using `GITHUB_TOKEN`
 
@@ -256,6 +298,23 @@ Inputs:
 
 Secrets:
 - `NUGET_API_KEY` (optional)
+
+### `.github/workflows/npm.yml`
+
+Inputs:
+- `package_path` (required)
+- `node_version` (optional, default `20`)
+- `package_manager` (optional, default `auto`; allowed values: `auto`, `pnpm`, `yarn`, `npm`)
+- `registry_url` (optional, default `https://npm.pkg.github.com`)
+- `run_lint` (optional, default `true`)
+- `run_test` (optional, default `true`)
+- `run_typecheck` (optional, default `true`)
+- `run_build` (optional, default `true`)
+- `publish` (optional, default `true`)
+- `dry_run` (optional, default `false`)
+
+Secrets:
+- `NPM_TOKEN` (optional)
 
 ### `.github/workflows/cleanup-artifacts.yml`
 

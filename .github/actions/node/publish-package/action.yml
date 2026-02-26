@@ -1,0 +1,84 @@
+name: Node Publish Package
+
+description: Publish an npm package to the configured registry.
+
+inputs:
+  package_path:
+    required: true
+  package_manager:
+    required: true
+  registry_url:
+    required: true
+  dry_run:
+    required: false
+    default: "false"
+
+outputs:
+  package_name:
+    description: Package name from package.json.
+    value: ${{ steps.meta.outputs.package_name }}
+  package_version:
+    description: Package version from package.json.
+    value: ${{ steps.meta.outputs.package_version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read package metadata
+      id: meta
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        package_path="${{ inputs.package_path }}"
+
+        cd "${package_path}"
+
+        package_name="$(node -p "require('./package.json').name")"
+        package_version="$(node -p "require('./package.json').version")"
+
+        if [ -z "${package_name}" ] || [ -z "${package_version}" ]; then
+          echo "package.json must include name and version"
+          exit 1
+        fi
+
+        echo "package_name=${package_name}" >> "${GITHUB_OUTPUT}"
+        echo "package_version=${package_version}" >> "${GITHUB_OUTPUT}"
+
+    - name: Publish package
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        package_path="${{ inputs.package_path }}"
+        manager="${{ inputs.package_manager }}"
+        registry_url="${{ inputs.registry_url }}"
+        dry_run="${{ inputs.dry_run }}"
+
+        cd "${package_path}"
+
+        publish_args=(--registry "${registry_url}")
+
+        if [ "${dry_run}" = "true" ]; then
+          publish_args+=(--dry-run)
+        fi
+
+        case "${manager}" in
+          pnpm)
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            pnpm publish --no-git-checks "${publish_args[@]}"
+            ;;
+          yarn)
+            corepack enable
+            corepack prepare yarn@latest --activate
+            yarn npm publish "${publish_args[@]}"
+            ;;
+          npm)
+            npm publish "${publish_args[@]}"
+            ;;
+          *)
+            echo "Unsupported package_manager '${manager}'"
+            exit 1
+            ;;
+        esac

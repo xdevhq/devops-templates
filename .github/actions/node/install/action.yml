@@ -1,0 +1,80 @@
+name: Node Install
+
+description: Detect package manager and install project dependencies.
+
+inputs:
+  package_path:
+    required: true
+  package_manager:
+    required: false
+    default: auto
+
+outputs:
+  package_manager:
+    description: The resolved package manager (pnpm, yarn, npm).
+    value: ${{ steps.resolve.outputs.package_manager }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve package manager
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        package_path="${{ inputs.package_path }}"
+        requested="${{ inputs.package_manager }}"
+
+        if [ "${requested}" != "auto" ]; then
+          resolved="${requested}"
+        elif [ -f "${package_path}/pnpm-lock.yaml" ]; then
+          resolved="pnpm"
+        elif [ -f "${package_path}/yarn.lock" ]; then
+          resolved="yarn"
+        elif [ -f "${package_path}/package-lock.json" ]; then
+          resolved="npm"
+        else
+          echo "Unable to detect package manager in '${package_path}'. Set 'package_manager' explicitly."
+          exit 1
+        fi
+
+        case "${resolved}" in
+          pnpm|yarn|npm) ;;
+          *)
+            echo "Unsupported package_manager '${resolved}'. Use one of: auto, pnpm, yarn, npm."
+            exit 1
+            ;;
+        esac
+
+        echo "package_manager=${resolved}" >> "${GITHUB_OUTPUT}"
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        package_path="${{ inputs.package_path }}"
+        manager="${{ steps.resolve.outputs.package_manager }}"
+
+        cd "${package_path}"
+
+        case "${manager}" in
+          pnpm)
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            pnpm install --frozen-lockfile
+            ;;
+          yarn)
+            corepack enable
+            corepack prepare yarn@latest --activate
+            yarn install --immutable
+            ;;
+          npm)
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+            ;;
+        esac
