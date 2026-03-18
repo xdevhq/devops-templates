@@ -68,12 +68,13 @@ jobs:
       package_manager: ${{ steps.install.outputs.package_manager }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node_version }}
+          package-manager-cache: false
 
       - name: Install dependencies
         id: install
