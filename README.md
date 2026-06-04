@@ -91,7 +91,7 @@ jobs:
 
 Notes:
 - Set `APP_PROJECT` to the .csproj you want containerized.
-- Set `APP_DLL` to the published app assembly name (for example `Platform.Gateway.Api.dll`).
+- Set `APP_DLL` to the published app assembly name (for example `Example.Gateway.Api.dll`).
 - If private feed restore is needed during image build, pass auth build args:
   - `--build-arg GITHUB_USERNAME=${{ github.actor }}`
   - `--build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GITHUB_TOKEN }}`
@@ -187,7 +187,7 @@ npm notes:
 Example `.npmrc` for consuming repos:
 
 ```ini
-@platform:registry=https://npm.pkg.github.com
+@<scope>:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 always-auth=true
 ```
