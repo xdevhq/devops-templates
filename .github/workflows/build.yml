@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Build image with Podman
-        uses: alexhovy/devops-templates/.github/actions/podman/build-image@main
+        uses: xdevhq/devops-templates/.github/actions/podman/build-image@main
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
@@ -54,7 +54,7 @@ jobs:
             --build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GHCR_TOKEN }}
 
       - name: Tag image for GHCR
-        uses: alexhovy/devops-templates/.github/actions/podman/tag-image@main
+        uses: xdevhq/devops-templates/.github/actions/podman/tag-image@main
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
@@ -64,7 +64,7 @@ jobs:
           podman login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GHCR_TOKEN }}"
 
       - name: Push image to GHCR
-        uses: alexhovy/devops-templates/.github/actions/podman/push-image@main
+        uses: xdevhq/devops-templates/.github/actions/podman/push-image@main
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}

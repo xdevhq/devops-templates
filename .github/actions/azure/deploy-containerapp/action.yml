@@ -1,6 +1,6 @@
 name: Azure Container App Deploy
 
-author: alexhovy
+author: xdevhq
 
 description: Configure GHCR registry credentials and deploy an image to Azure Container Apps.
 

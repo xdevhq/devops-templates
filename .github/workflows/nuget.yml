@@ -48,12 +48,12 @@ jobs:
           dotnet-version: ${{ inputs.dotnet_version }}
 
       - name: Restore dependencies
-        uses: alexhovy/devops-templates/.github/actions/dotnet/restore@main
+        uses: xdevhq/devops-templates/.github/actions/dotnet/restore@main
         with:
           project_path: ${{ inputs.project_path }}
 
       - name: Pack NuGet package
-        uses: alexhovy/devops-templates/.github/actions/dotnet/pack@main
+        uses: xdevhq/devops-templates/.github/actions/dotnet/pack@main
         with:
           project_path: ${{ inputs.project_path }}
           configuration: ${{ inputs.configuration }}
@@ -61,7 +61,7 @@ jobs:
           output_path: ./artifacts/nuget
 
       - name: Publish NuGet package
-        uses: alexhovy/devops-templates/.github/actions/dotnet/push-package@main
+        uses: xdevhq/devops-templates/.github/actions/dotnet/push-package@main
         with:
           packages_glob: ./artifacts/nuget/*.nupkg
           source_url: ${{ env.NUGET_PUBLISH_SOURCE_URL }}

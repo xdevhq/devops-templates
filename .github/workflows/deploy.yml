@@ -42,13 +42,13 @@ jobs:
           esac
 
       - name: Azure login
-        uses: alexhovy/devops-templates/.github/actions/azure/login@main
+        uses: xdevhq/devops-templates/.github/actions/azure/login@main
         with:
           azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy container to Web App
         if: ${{ inputs.deploy_target == 'webapp' }}
-        uses: alexhovy/devops-templates/.github/actions/azure/deploy-webapp@main
+        uses: xdevhq/devops-templates/.github/actions/azure/deploy-webapp@main
         with:
           azure_webapp_name: ${{ vars.AZURE_WEBAPP_NAME }}
           azure_resource_group: ${{ vars.AZURE_RESOURCE_GROUP }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Deploy container to Azure Container Apps
         if: ${{ inputs.deploy_target == 'containerapp' }}
-        uses: alexhovy/devops-templates/.github/actions/azure/deploy-containerapp@main
+        uses: xdevhq/devops-templates/.github/actions/azure/deploy-containerapp@main
         with:
           azure_containerapp_name: ${{ vars.AZURE_CONTAINERAPP_NAME }}
           azure_resource_group: ${{ vars.AZURE_RESOURCE_GROUP }}

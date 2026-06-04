@@ -78,14 +78,14 @@ jobs:
 
       - name: Install dependencies
         id: install
-        uses: alexhovy/devops-templates/.github/actions/node/install@main
+        uses: xdevhq/devops-templates/.github/actions/node/install@main
         with:
           package_path: ${{ inputs.package_path }}
           package_manager: ${{ inputs.package_manager }}
 
       - name: Run lint
         if: ${{ inputs.run_lint }}
-        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        uses: xdevhq/devops-templates/.github/actions/node/run-script@main
         with:
           package_path: ${{ inputs.package_path }}
           package_manager: ${{ steps.install.outputs.package_manager }}
@@ -93,7 +93,7 @@ jobs:
 
       - name: Run tests
         if: ${{ inputs.run_test }}
-        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        uses: xdevhq/devops-templates/.github/actions/node/run-script@main
         with:
           package_path: ${{ inputs.package_path }}
           package_manager: ${{ steps.install.outputs.package_manager }}
@@ -101,7 +101,7 @@ jobs:
 
       - name: Run typecheck
         if: ${{ inputs.run_typecheck }}
-        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        uses: xdevhq/devops-templates/.github/actions/node/run-script@main
         with:
           package_path: ${{ inputs.package_path }}
           package_manager: ${{ steps.install.outputs.package_manager }}
@@ -109,7 +109,7 @@ jobs:
 
       - name: Run build
         if: ${{ inputs.run_build }}
-        uses: alexhovy/devops-templates/.github/actions/node/run-script@main
+        uses: xdevhq/devops-templates/.github/actions/node/run-script@main
         with:
           package_path: ${{ inputs.package_path }}
           package_manager: ${{ steps.install.outputs.package_manager }}
@@ -118,7 +118,7 @@ jobs:
       - name: Publish package
         id: publish
         if: ${{ inputs.publish }}
-        uses: alexhovy/devops-templates/.github/actions/node/publish-package@main
+        uses: xdevhq/devops-templates/.github/actions/node/publish-package@main
         with:
           package_path: ${{ inputs.package_path }}
           package_manager: ${{ steps.install.outputs.package_manager }}
