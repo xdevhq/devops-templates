@@ -62,12 +62,22 @@ runs:
         case "${manager}" in
           pnpm)
             corepack enable
-            corepack prepare pnpm@latest --activate
+            package_manager_spec="$(node -e "const p = require('./package.json'); if (typeof p.packageManager === 'string') console.log(p.packageManager);")"
+            if [[ "${package_manager_spec}" == pnpm@* ]]; then
+              corepack prepare "${package_manager_spec}" --activate
+            else
+              corepack prepare pnpm@10 --activate
+            fi
             pnpm install --frozen-lockfile
             ;;
           yarn)
             corepack enable
-            corepack prepare yarn@latest --activate
+            package_manager_spec="$(node -e "const p = require('./package.json'); if (typeof p.packageManager === 'string') console.log(p.packageManager);")"
+            if [[ "${package_manager_spec}" == yarn@* ]]; then
+              corepack prepare "${package_manager_spec}" --activate
+            else
+              corepack prepare yarn@latest --activate
+            fi
             yarn install --immutable
             ;;
           npm)
