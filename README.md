@@ -318,7 +318,7 @@ Secrets:
 
 Package manager versions:
 - For `pnpm` and `yarn`, the installer uses the consuming package's `packageManager` field when present.
-- If `pnpm` is selected and no `packageManager` field is present, the installer uses `pnpm@10` to remain compatible with the default Node 20 runtime.
+- If `pnpm` is selected and no `packageManager` field is present
 
 ### `.github/workflows/cleanup-artifacts.yml`
 
