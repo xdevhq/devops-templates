@@ -8,7 +8,7 @@ This repository is a shared DevOps template product. Workflows, composite action
 
 ## Agent Operating Procedure
 Before making changes, agents must follow this workflow:
-1. Understand context: identify the template or workflow being changed, read applicable `AGENTS.md` files, and review relevant README documentation.
+1. Understand context: identify the template or workflow being changed, read applicable `AGENTS.md` files, and review relevant README and docs content.
 2. Search for existing patterns: find similar workflows, composite actions, and template usage before introducing new approaches.
 3. Verify external best practices: for new workflow behavior, deployment changes, or infrastructure patterns, check official GitHub, Azure, Docker, or package publishing documentation.
 4. Define a plan: identify affected workflows, actions, inputs, outputs, permissions, secrets, and validation steps before implementation.
@@ -20,6 +20,7 @@ Before making changes, agents must follow this workflow:
 - `.github/workflows/`: Reusable GitHub Actions workflows for build, deploy, publish, and cleanup flows.
 - `.github/actions/`: Composite actions shared by the reusable workflows.
 - `.github/containerfiles/`: Reusable container build templates.
+- `docs/`: Detailed consumer-facing guidance, workflow contracts, operational notes, and migration guidance.
 - `README.md`: Primary usage guidance for consuming repositories.
 
 ## Working Principles
@@ -38,7 +39,8 @@ Before making changes, agents must follow this workflow:
 - Reuse existing naming conventions for inputs, outputs, secrets, variables, and workflow structure.
 
 ## Documentation Standards
-- Keep `README.md` concise and practical for consuming repositories.
+- Keep `README.md` concise and practical as the entry point for consuming repositories.
+- Put detailed workflow contracts, operational guidance, and migration notes in `docs/`.
 - When meaningful changes are introduced, update the relevant usage guidance in the same iteration.
 - Document purpose, required inputs, optional inputs, secrets, outputs, and example usage when those change.
 - Do not duplicate information that is already obvious from the repository layout.
