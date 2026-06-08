@@ -41,7 +41,9 @@ The design is intentionally opinionated and proven across multiple .NET services
 - npm workflow uses the consuming repo's `.npmrc` for registry and auth policy.
 - Cleanup workflows keep Actions artifacts and GHCR package history bounded.
 
-## Quick Start: Node Container Build
+## Quick Starts
+
+### Node Container Build
 
 ```yaml
 name: Build
@@ -65,7 +67,7 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-## Quick Start: .NET Container Build
+### .NET Container Build
 
 ```yaml
 name: Build
@@ -92,7 +94,7 @@ jobs:
 
 See [Container builds](docs/container-builds.md) for template defaults, private feed restore, and build argument guidance.
 
-## Quick Start: Deploy
+### Deploy
 
 ```yaml
 name: Deploy
@@ -116,7 +118,7 @@ jobs:
 
 See [Deployments](docs/deployments.md) for target-specific variables, secrets, and port behavior.
 
-## Quick Start: NuGet Publish
+### NuGet Publish
 
 ```yaml
 name: Publish NuGet
@@ -136,7 +138,7 @@ jobs:
       project_path: ./src/<path-to-project>.csproj
 ```
 
-## Quick Start: npm Publish
+### npm Publish
 
 ```yaml
 name: Publish NPM
@@ -159,7 +161,7 @@ jobs:
 
 See [Package publishing](docs/package-publishing.md) for registry, token, and package manager guidance.
 
-## Quick Start: Cleanup
+### Cleanup
 
 ```yaml
 name: Cleanup GHCR
