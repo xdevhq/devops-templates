@@ -19,7 +19,7 @@ The design is intentionally opinionated and proven across multiple .NET services
 - `.github/workflows/cleanup-artifacts.yml`: reusable GitHub Actions artifact cleanup workflow
 - `.github/workflows/cleanup-ghcr.yml`: reusable GHCR version cleanup workflow
 - `.github/actions/*`: composite actions used by the workflows
-- `.github/containerfiles/*`: template Containerfiles for `node` and `dotnet`
+- `.github/containerfiles/*`: template Containerfiles for `node`, `dotnet`, and `python`
 
 ## Documentation
 
@@ -93,6 +93,31 @@ jobs:
 ```
 
 See [Container builds](docs/container-builds.md) for template defaults, private feed restore, and build argument guidance.
+
+### Python Container Build
+
+```yaml
+name: Build
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    uses: <owner>/<templates-repo>/.github/workflows/build.yml@main
+    with:
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}
+      template: python
+      build_args: --build-arg APP_PORT=8080
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
 
 ### Deploy
 

@@ -1,0 +1,67 @@
+ARG PYTHON_VERSION=3.12
+
+FROM python:${PYTHON_VERSION}-slim AS build
+
+ARG APT_BUILD_PACKAGES=""
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+
+RUN if [ -n "${APT_BUILD_PACKAGES}" ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ${APT_BUILD_PACKAGES} && \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
+
+COPY . .
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    if [ -f uv.lock ]; then \
+      uv sync --locked --no-dev; \
+    elif [ -f pyproject.toml ]; then \
+      uv sync --no-dev; \
+    elif [ -f requirements.txt ]; then \
+      uv venv "${UV_PROJECT_ENVIRONMENT}" && \
+      uv pip install --python "${UV_PROJECT_ENVIRONMENT}/bin/python" -r requirements.txt; \
+    else \
+      echo "Expected uv.lock, pyproject.toml, or requirements.txt in the build context." >&2; \
+      exit 1; \
+    fi
+
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+ARG APT_RUNTIME_PACKAGES=""
+ARG APP_PORT=8080
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/opt/venv/bin:${PATH}"
+ENV APP_COMMAND="python main.py"
+
+WORKDIR /app
+
+RUN if [ -n "${APT_RUNTIME_PACKAGES}" ]; then \
+      apt-get update && \
+      apt-get install -y --no-install-recommends ${APT_RUNTIME_PACKAGES} && \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
+
+RUN addgroup --system app && adduser --system --ingroup app appuser
+
+COPY --from=build /opt/venv /opt/venv
+COPY --from=build /app /app
+
+RUN chown -R appuser:app /app
+
+USER appuser
+EXPOSE ${APP_PORT}
+
+CMD ["sh", "-c", "exec ${APP_COMMAND}"]
