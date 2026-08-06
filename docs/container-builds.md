@@ -33,11 +33,11 @@ Set `template` explicitly. The template identifies the reusable Containerfile fa
 The build workflow forwards GitHub Packages auth to container builds:
 
 - `GITHUB_USERNAME`: `${{ github.actor }}`
-- `GITHUB_PACKAGES_OWNER`: `${{ github.repository_owner }}`
 - `github_packages_token`: a Podman build secret sourced from `GHCR_TOKEN`
 
 The Node and .NET templates use these values only during dependency install or
-restore. Do not commit real package credentials to consuming repositories.
+restore. Consuming repositories must provide registry or source policy files
+when private dependencies are used. Do not commit real package credentials.
 
 ## Build Context Ignore Files
 
@@ -83,10 +83,10 @@ always-auth=true
 
 The Node template reads the `github_packages_token` build secret and exposes it
 as `NODE_AUTH_TOKEN` while it runs `pnpm install`, `yarn install`, `npm ci`, or
-`npm install`. If `.npmrc` is absent and the build secret is available, the
-template creates a temporary GitHub Packages `.npmrc` for
-`GITHUB_PACKAGES_OWNER`. The template removes `.npmrc` after dependency install
-and production pruning so registry auth is not copied into the runtime image.
+`npm install`, and while it prunes production dependencies. It does not generate
+`.npmrc`; the consuming repository owns registry policy. The template removes
+`.npmrc` after production pruning so registry policy is not copied into the
+runtime image.
 
 ## .NET Builds
 
@@ -124,16 +124,12 @@ consuming repo `NuGet.Config` and use `github` as the package source key:
 The .NET template supplies credentials for the `github` source during
 `dotnet restore` through NuGet's
 `NuGetPackageSourceCredentials_github` environment variable, sourced from the
-`github_packages_token` build secret. If `NuGet.Config` or `nuget.config` is
-absent and the build secret is available, the
-template creates a temporary `NuGet.Config` with `nuget.org` and
-`https://nuget.pkg.github.com/${GITHUB_PACKAGES_OWNER}/index.json`, runs
-restore, and removes the generated config.
+`github_packages_token` build secret. It does not generate `NuGet.Config`; the
+consuming repository owns restore source policy.
 
 The build workflow forwards these metadata build args to the container build:
 
 - `--build-arg GITHUB_USERNAME=${{ github.actor }}`
-- `--build-arg GITHUB_PACKAGES_OWNER=${{ github.repository_owner }}`
 
 ## Python Builds
 

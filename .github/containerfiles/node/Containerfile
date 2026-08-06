@@ -6,19 +6,12 @@ FROM node:${NODE_VERSION}-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
-ARG GITHUB_PACKAGES_OWNER=
-
 COPY . .
 
 RUN corepack enable
 
 RUN --mount=type=secret,id=github_packages_token \
     GITHUB_PACKAGES_TOKEN="$(cat /run/secrets/github_packages_token 2>/dev/null || true)" && \
-    if [ ! -f .npmrc ] && [ -n "${GITHUB_PACKAGES_TOKEN}" ] && [ -n "${GITHUB_PACKAGES_OWNER}" ]; then \
-      printf '@%s:registry=https://npm.pkg.github.com\n' "${GITHUB_PACKAGES_OWNER}" > .npmrc && \
-      printf '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}\n' >> .npmrc && \
-      printf 'always-auth=true\n' >> .npmrc; \
-    fi && \
     if [ -f pnpm-lock.yaml ]; then \
       corepack prepare pnpm@latest --activate && NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" pnpm install --frozen-lockfile; \
     elif [ -f yarn.lock ]; then \
@@ -27,14 +20,11 @@ RUN --mount=type=secret,id=github_packages_token \
       NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" npm ci; \
     else \
       NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" npm install; \
-    fi && \
-    rm -f .npmrc
+    fi
 
 # Build the application and prune dev dependencies.
 FROM base AS builder
 WORKDIR /app
-
-ARG GITHUB_PACKAGES_OWNER=
 
 COPY --from=deps /app ./
 
@@ -50,11 +40,6 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 
 RUN --mount=type=secret,id=github_packages_token \
     GITHUB_PACKAGES_TOKEN="$(cat /run/secrets/github_packages_token 2>/dev/null || true)" && \
-    if [ ! -f .npmrc ] && [ -n "${GITHUB_PACKAGES_TOKEN}" ] && [ -n "${GITHUB_PACKAGES_OWNER}" ]; then \
-      printf '@%s:registry=https://npm.pkg.github.com\n' "${GITHUB_PACKAGES_OWNER}" > .npmrc && \
-      printf '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}\n' >> .npmrc && \
-      printf 'always-auth=true\n' >> .npmrc; \
-    fi && \
     if [ -f pnpm-lock.yaml ]; then \
       corepack prepare pnpm@latest --activate && NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" pnpm prune --prod; \
     elif [ -f yarn.lock ]; then \

@@ -51,7 +51,6 @@ jobs:
           build_args: >-
             ${{ inputs.build_args }}
             --build-arg GITHUB_USERNAME=${{ github.actor }}
-            --build-arg GITHUB_PACKAGES_OWNER=${{ github.repository_owner }}
         env:
           GITHUB_PACKAGES_TOKEN: ${{ secrets.GHCR_TOKEN }}
 
