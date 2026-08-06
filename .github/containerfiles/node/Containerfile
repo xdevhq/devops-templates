@@ -6,23 +6,35 @@ FROM node:${NODE_VERSION}-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
+ARG GITHUB_PACKAGES_OWNER=
+
 COPY . .
 
 RUN corepack enable
 
-RUN if [ -f pnpm-lock.yaml ]; then \
-      corepack prepare pnpm@latest --activate && pnpm install --frozen-lockfile; \
+RUN --mount=type=secret,id=github_packages_token \
+    GITHUB_PACKAGES_TOKEN="$(cat /run/secrets/github_packages_token 2>/dev/null || true)" && \
+    if [ ! -f .npmrc ] && [ -n "${GITHUB_PACKAGES_TOKEN}" ] && [ -n "${GITHUB_PACKAGES_OWNER}" ]; then \
+      printf '@%s:registry=https://npm.pkg.github.com\n' "${GITHUB_PACKAGES_OWNER}" > .npmrc && \
+      printf '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}\n' >> .npmrc && \
+      printf 'always-auth=true\n' >> .npmrc; \
+    fi && \
+    if [ -f pnpm-lock.yaml ]; then \
+      corepack prepare pnpm@latest --activate && NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" pnpm install --frozen-lockfile; \
     elif [ -f yarn.lock ]; then \
-      corepack prepare yarn@latest --activate && yarn install --immutable; \
+      corepack prepare yarn@latest --activate && NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" yarn install --immutable; \
     elif [ -f package-lock.json ]; then \
-      npm ci; \
+      NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" npm ci; \
     else \
-      npm install; \
-    fi
+      NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" npm install; \
+    fi && \
+    rm -f .npmrc
 
 # Build the application and prune dev dependencies.
 FROM base AS builder
 WORKDIR /app
+
+ARG GITHUB_PACKAGES_OWNER=
 
 COPY --from=deps /app ./
 
@@ -36,15 +48,23 @@ RUN if [ -f pnpm-lock.yaml ]; then \
       npm run build; \
     fi
 
-RUN if [ -f pnpm-lock.yaml ]; then \
-      corepack prepare pnpm@latest --activate && pnpm prune --prod; \
+RUN --mount=type=secret,id=github_packages_token \
+    GITHUB_PACKAGES_TOKEN="$(cat /run/secrets/github_packages_token 2>/dev/null || true)" && \
+    if [ ! -f .npmrc ] && [ -n "${GITHUB_PACKAGES_TOKEN}" ] && [ -n "${GITHUB_PACKAGES_OWNER}" ]; then \
+      printf '@%s:registry=https://npm.pkg.github.com\n' "${GITHUB_PACKAGES_OWNER}" > .npmrc && \
+      printf '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}\n' >> .npmrc && \
+      printf 'always-auth=true\n' >> .npmrc; \
+    fi && \
+    if [ -f pnpm-lock.yaml ]; then \
+      corepack prepare pnpm@latest --activate && NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" pnpm prune --prod; \
     elif [ -f yarn.lock ]; then \
-      corepack prepare yarn@latest --activate && yarn workspaces focus --production || yarn install --production --immutable; \
+      corepack prepare yarn@latest --activate && NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" yarn workspaces focus --production || NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" yarn install --production --immutable; \
     elif [ -f package-lock.json ]; then \
-      npm prune --omit=dev; \
+      NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" npm prune --omit=dev; \
     else \
-      npm prune --omit=dev; \
-    fi
+      NODE_AUTH_TOKEN="${GITHUB_PACKAGES_TOKEN}" npm prune --omit=dev; \
+    fi && \
+    rm -f .npmrc
 
 # Minimal runtime image.
 FROM base AS runner

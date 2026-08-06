@@ -29,8 +29,18 @@ runs:
         containerfile="${{ inputs.containerfile }}"
         template="${{ inputs.template }}"
         build_args="${{ inputs.build_args }}"
+        secret_args=()
+        secret_file=""
+        if [ -n "${GITHUB_PACKAGES_TOKEN:-}" ]; then
+          secret_file="$(mktemp)"
+          chmod 600 "${secret_file}"
+          printf '%s' "${GITHUB_PACKAGES_TOKEN}" > "${secret_file}"
+          trap 'rm -f "${secret_file}"' EXIT
+          secret_args+=(--secret "id=github_packages_token,src=${secret_file}")
+        fi
+
         if [ ! -f "${context}/${containerfile}" ]; then
           cp "${{ github.action_path }}/../../../containerfiles/${template}/Containerfile" "${context}/${containerfile}"
         fi
-        podman build ${build_args} -f "${context}/${containerfile}" -t "${{ inputs.image_name }}:${{ inputs.image_tag }}" "${context}"
+        podman build ${build_args} "${secret_args[@]}" -f "${context}/${containerfile}" -t "${{ inputs.image_name }}:${{ inputs.image_tag }}" "${context}"
       shell: bash

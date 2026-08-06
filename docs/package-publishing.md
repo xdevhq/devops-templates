@@ -26,9 +26,24 @@ jobs:
 
 Guidance:
 - Restore source policy should live in the consuming repo `NuGet.Config`.
+- Use `github` as the GitHub Packages source key. The workflow supplies
+  credentials for that source during restore.
 - The default publish target is the GitHub Packages owner feed.
 - Override the publish target with `source_url`.
 - Use `NUGET_API_KEY` only when publishing to feeds that require a non-GitHub token, such as nuget.org.
+
+Example `NuGet.Config` for consuming repositories:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/<owner>/index.json" />
+  </packageSources>
+</configuration>
+```
 
 ## npm
 

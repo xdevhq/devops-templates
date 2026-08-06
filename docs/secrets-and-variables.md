@@ -5,7 +5,7 @@ Keep secrets, credentials, and environment-specific values in consuming reposito
 ## Build And Push
 
 Secrets:
-- `GHCR_TOKEN`: usually `${{ secrets.GITHUB_TOKEN }}` in the consuming repository.
+- `GHCR_TOKEN`: usually `${{ secrets.GITHUB_TOKEN }}` in the consuming repository. The build workflow uses it for GHCR push authentication and as the GitHub Packages build secret for Node and .NET dependency install or restore.
 
 ## Deploy
 

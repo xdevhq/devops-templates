@@ -5,17 +5,32 @@ ARG APP_DLL=App.dll
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
 WORKDIR /src
 
-# Optional auth args for private feed restores referenced by NuGet.Config.
-ARG NUGET_AUTH_TOKEN=
-ARG GITHUB_PACKAGES_TOKEN=
+# Optional metadata for private GitHub Packages restores.
 ARG GITHUB_USERNAME=
-ENV NUGET_AUTH_TOKEN=${NUGET_AUTH_TOKEN}
-ENV GITHUB_PACKAGES_TOKEN=${GITHUB_PACKAGES_TOKEN}
-ENV GITHUB_USERNAME=${GITHUB_USERNAME}
+ARG GITHUB_PACKAGES_OWNER=
 
 COPY . .
 
-RUN dotnet restore "${APP_PROJECT}"
+RUN --mount=type=secret,id=github_packages_token \
+    GITHUB_PACKAGES_TOKEN="$(cat /run/secrets/github_packages_token 2>/dev/null || true)" && \
+    generated_nuget_config=false; \
+    if [ ! -f NuGet.Config ] && [ ! -f nuget.config ] && [ -n "${GITHUB_PACKAGES_TOKEN}" ] && [ -n "${GITHUB_PACKAGES_OWNER}" ]; then \
+      generated_nuget_config=true; \
+      printf '%s\n' \
+        '<?xml version="1.0" encoding="utf-8"?>' \
+        '<configuration>' \
+        '  <packageSources>' \
+        '    <clear />' \
+        '    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />' \
+        "    <add key=\"github\" value=\"https://nuget.pkg.github.com/${GITHUB_PACKAGES_OWNER}/index.json\" />" \
+        '  </packageSources>' \
+        '</configuration>' \
+        > NuGet.Config; \
+    fi; \
+    NuGetPackageSourceCredentials_github="Username=${GITHUB_USERNAME};Password=${GITHUB_PACKAGES_TOKEN}" dotnet restore "${APP_PROJECT}"; \
+    if [ "${generated_nuget_config}" = true ]; then \
+      rm -f NuGet.Config; \
+    fi
 RUN dotnet publish "${APP_PROJECT}" -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS runtime
