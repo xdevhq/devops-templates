@@ -30,6 +30,15 @@ jobs:
 
 Set `template` explicitly. The template identifies the reusable Containerfile family under `.github/containerfiles/`.
 
+The build workflow forwards GitHub Packages auth to container builds:
+
+- `GITHUB_USERNAME`: `${{ github.actor }}`
+- `GITHUB_PACKAGES_OWNER`: `${{ github.repository_owner }}`
+- `github_packages_token`: a Podman build secret sourced from `GHCR_TOKEN`
+
+The Node and .NET templates use these values only during dependency install or
+restore. Do not commit real package credentials to consuming repositories.
+
 ## Build Context Ignore Files
 
 Add a `.containerignore` file to the root of the consuming repository build
@@ -46,6 +55,38 @@ Podman also supports `.dockerignore`, but `.containerignore` takes precedence
 when both files exist. Prefer `.containerignore` for repositories using this
 workflow because the build runs with Podman. Use `.dockerignore` only when the
 same build context must also be built directly with Docker tooling.
+
+## Node Builds
+
+Use the `node` template for Node services:
+
+```yaml
+jobs:
+  build:
+    uses: <owner>/<templates-repo>/.github/workflows/build.yml@main
+    with:
+      image_name: ${{ github.event.repository.name }}
+      image_tag: ${{ github.sha }}
+      template: node
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+For private GitHub Packages dependencies, commit registry policy in the
+consuming repo `.npmrc` and use the `NODE_AUTH_TOKEN` placeholder:
+
+```ini
+@<scope>:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+always-auth=true
+```
+
+The Node template reads the `github_packages_token` build secret and exposes it
+as `NODE_AUTH_TOKEN` while it runs `pnpm install`, `yarn install`, `npm ci`, or
+`npm install`. If `.npmrc` is absent and the build secret is available, the
+template creates a temporary GitHub Packages `.npmrc` for
+`GITHUB_PACKAGES_OWNER`. The template removes `.npmrc` after dependency install
+and production pruning so registry auth is not copied into the runtime image.
 
 ## .NET Builds
 
@@ -66,10 +107,33 @@ jobs:
 
 Set `APP_PROJECT` to the project file to containerize. Set `APP_DLL` to the published app assembly name, for example `Example.Gateway.Api.dll`.
 
-If private GitHub Packages restore is needed during image build, keep restore policy in the consuming repo `NuGet.Config`. The build workflow forwards these auth build args from `GHCR_TOKEN` to the container build:
+For private GitHub Packages dependencies, commit restore source policy in the
+consuming repo `NuGet.Config` and use `github` as the package source key:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/<owner>/index.json" />
+  </packageSources>
+</configuration>
+```
+
+The .NET template supplies credentials for the `github` source during
+`dotnet restore` through NuGet's
+`NuGetPackageSourceCredentials_github` environment variable, sourced from the
+`github_packages_token` build secret. If `NuGet.Config` or `nuget.config` is
+absent and the build secret is available, the
+template creates a temporary `NuGet.Config` with `nuget.org` and
+`https://nuget.pkg.github.com/${GITHUB_PACKAGES_OWNER}/index.json`, runs
+restore, and removes the generated config.
+
+The build workflow forwards these metadata build args to the container build:
 
 - `--build-arg GITHUB_USERNAME=${{ github.actor }}`
-- `--build-arg GITHUB_PACKAGES_TOKEN=${{ secrets.GHCR_TOKEN }}`
+- `--build-arg GITHUB_PACKAGES_OWNER=${{ github.repository_owner }}`
 
 ## Python Builds
 

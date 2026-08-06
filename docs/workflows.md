@@ -17,7 +17,7 @@ Inputs:
 - `build_args` (optional, default empty): extra Podman build arguments.
 
 Secrets:
-- `GHCR_TOKEN` (required): token used to authenticate to GHCR. Usually `${{ secrets.GITHUB_TOKEN }}`.
+- `GHCR_TOKEN` (required): token used to authenticate to GHCR and passed as a build secret for GitHub Packages dependency install or restore. Usually `${{ secrets.GITHUB_TOKEN }}`.
 
 Outputs:
 - `image_name`
