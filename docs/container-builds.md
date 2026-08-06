@@ -30,6 +30,23 @@ jobs:
 
 Set `template` explicitly. The template identifies the reusable Containerfile family under `.github/containerfiles/`.
 
+## Build Context Ignore Files
+
+Add a `.containerignore` file to the root of the consuming repository build
+context. The reusable templates copy the selected Containerfile into that
+context and build with `COPY . .`, so ignored files must be controlled by the
+consuming repository.
+
+At minimum, exclude local dependencies, build outputs, test reports, caches,
+logs, editor files, and local environment files that are not needed during the
+image build. Use the `context` workflow input when a service builds from a
+subdirectory, and place `.containerignore` in that same context directory.
+
+Podman also supports `.dockerignore`, but `.containerignore` takes precedence
+when both files exist. Prefer `.containerignore` for repositories using this
+workflow because the build runs with Podman. Use `.dockerignore` only when the
+same build context must also be built directly with Docker tooling.
+
 ## .NET Builds
 
 Use the `dotnet` template for .NET services:

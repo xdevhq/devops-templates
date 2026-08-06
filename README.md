@@ -36,6 +36,7 @@ The design is intentionally opinionated and proven across multiple .NET services
 - Build workflow requires consuming repos to set `template` explicitly.
 - Build workflow supports optional `context`, `containerfile`, and `build_args`.
 - Build workflow builds and pushes directly to GHCR.
+- Consuming repos should keep a `.containerignore` in the build context used by the workflow.
 - Deploy workflow supports Azure Web App for Containers and Azure Container Apps.
 - NuGet workflow uses the consuming repo's `NuGet.Config` for restore sources.
 - npm workflow uses the consuming repo's `.npmrc` for registry and auth policy.
