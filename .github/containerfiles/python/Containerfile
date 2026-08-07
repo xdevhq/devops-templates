@@ -57,9 +57,7 @@ RUN if [ -n "${APT_RUNTIME_PACKAGES}" ]; then \
 RUN addgroup --system app && adduser --system --ingroup app appuser
 
 COPY --from=build /opt/venv /opt/venv
-COPY --from=build /app /app
-
-RUN chown -R appuser:app /app
+COPY --from=build --chown=appuser:app /app /app
 
 USER appuser
 EXPOSE ${APP_PORT}

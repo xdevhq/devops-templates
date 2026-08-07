@@ -88,6 +88,10 @@ as `NODE_AUTH_TOKEN` while it runs `pnpm install`, `yarn install`, `npm ci`, or
 `.npmrc` after production pruning so registry policy is not copied into the
 runtime image.
 
+Runtime application files are copied as the non-root `appuser`. This keeps the
+runtime process unprivileged while allowing frameworks that write local runtime
+caches, such as Next.js, to create files under the application directory.
+
 ## .NET Builds
 
 Use the `dotnet` template for .NET services:
@@ -170,5 +174,6 @@ Optional build arguments:
 - `.github/containerfiles/node/Containerfile` runs as non-root `appuser` and uses port `8080`.
 - `.github/containerfiles/dotnet/Containerfile` runs as non-root `appuser` and uses port `8080`.
 - `.github/containerfiles/python/Containerfile` runs as non-root `appuser` and uses port `8080`.
+- Runtime application files are owned by `appuser:app` in each template.
 
 Override `context`, `containerfile`, or `build_args` only when the consuming repository layout requires it.

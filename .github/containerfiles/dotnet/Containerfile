@@ -24,7 +24,7 @@ EXPOSE 8080
 
 RUN addgroup --system app && adduser --system --ingroup app appuser
 
-COPY --from=build /app/publish ./
+COPY --from=build --chown=appuser:app /app/publish ./
 
 RUN test -n "${APP_DLL}" && ln -sf "/app/${APP_DLL}" /app/app.dll
 
