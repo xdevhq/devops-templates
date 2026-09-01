@@ -18,7 +18,10 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: <owner>/<templates-repo>/.github/workflows/deploy.yml@main
-    secrets: inherit
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_PASSWORD: ${{ secrets.GHCR_PASSWORD }}
     with:
       deploy_env: prod
       deploy_target: webapp
@@ -52,6 +55,7 @@ Recommended baseline:
 
 - Scope RBAC at resource group level or narrower where possible.
 - Create one `AZURE_CREDENTIALS` secret per GitHub Environment target.
+- For cross-repository callers outside the same organization or enterprise, store passed secrets as repository or organization secrets and pass them explicitly.
 
 Create the App Registration / service principal once:
 

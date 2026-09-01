@@ -20,6 +20,13 @@ on:
         required: false
         type: string
         default: "8080"
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+      GHCR_USERNAME:
+        required: true
+      GHCR_PASSWORD:
+        required: true
 
 jobs:
   deploy:

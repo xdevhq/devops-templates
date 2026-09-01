@@ -134,7 +134,10 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: <owner>/<templates-repo>/.github/workflows/deploy.yml@main
-    secrets: inherit
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_PASSWORD: ${{ secrets.GHCR_PASSWORD }}
     with:
       deploy_env: prod
       deploy_target: webapp

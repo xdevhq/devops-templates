@@ -41,9 +41,11 @@ Inputs:
 - `container_port` (optional, default `8080`): application port exposed by the container.
 
 Secrets:
-- No explicit `workflow_call` secrets are declared.
-- Callers should use `secrets: inherit`.
-- The selected GitHub environment or repository must provide `AZURE_CREDENTIALS`, `GHCR_USERNAME`, and `GHCR_PASSWORD`.
+- `AZURE_CREDENTIALS` (required)
+- `GHCR_USERNAME` (required)
+- `GHCR_PASSWORD` (required)
+- Callers in the same organization or enterprise may use `secrets: inherit`.
+- Callers outside that boundary should pass named repository or organization secrets explicitly.
 
 Variables:
 - `AZURE_RESOURCE_GROUP` is required for both targets.

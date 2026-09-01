@@ -10,9 +10,11 @@ Secrets:
 ## Deploy
 
 Caller requirements:
-- The caller workflow must include `secrets: inherit` when invoking the reusable deploy workflow.
+- The caller workflow must pass `AZURE_CREDENTIALS`, `GHCR_USERNAME`, and `GHCR_PASSWORD`.
+- `secrets: inherit` is acceptable for repositories in the same organization or enterprise as this templates repository.
+- Repositories outside that boundary should pass named repository or organization secrets explicitly.
 
-Environment secret in the consuming repository environment:
+Secret:
 - `AZURE_CREDENTIALS`
 
 Repository-level or environment-level secrets in the consuming repository:
