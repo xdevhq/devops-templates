@@ -165,6 +165,8 @@ jobs:
     uses: <owner>/<templates-repo>/.github/workflows/nuget.yml@main
     with:
       project_path: ./src/<path-to-project>.csproj
+      test_paths: |
+        ./<solution-or-test-project>.slnx
 ```
 
 ### npm Publish

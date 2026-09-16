@@ -10,6 +10,14 @@ on:
       project_path:
         required: true
         type: string
+      test_paths:
+        required: false
+        type: string
+        default: ""
+      test_arguments:
+        required: false
+        type: string
+        default: ""
       package_version:
         required: false
         type: string
@@ -49,6 +57,14 @@ jobs:
         uses: xdevhq/devops-templates/.github/actions/dotnet/restore@main
         with:
           project_path: ${{ inputs.project_path }}
+
+      - name: Run tests
+        if: ${{ inputs.test_paths != '' }}
+        uses: xdevhq/devops-templates/.github/actions/dotnet/test@main
+        with:
+          test_paths: ${{ inputs.test_paths }}
+          configuration: ${{ inputs.configuration }}
+          arguments: ${{ inputs.test_arguments }}
 
       - name: Pack NuGet package
         uses: xdevhq/devops-templates/.github/actions/dotnet/pack@main

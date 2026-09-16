@@ -4,7 +4,7 @@ This repository provides reusable workflows for NuGet and npm package publishing
 
 ## NuGet
 
-Use `.github/workflows/nuget.yml` to restore, pack, and publish a NuGet package:
+Use `.github/workflows/nuget.yml` to restore, optionally test, pack, and publish a NuGet package:
 
 ```yaml
 name: Publish NuGet
@@ -22,10 +22,13 @@ jobs:
     uses: <owner>/<templates-repo>/.github/workflows/nuget.yml@main
     with:
       project_path: ./src/<path-to-project>.csproj
+      test_paths: |
+        ./<solution-or-test-project>.slnx
 ```
 
 Guidance:
 - Restore source policy should live in the consuming repo `NuGet.Config`.
+- Provide `test_paths` when the package should run validation before packing. Each non-empty line is passed to `dotnet test`.
 - Use `github` as the GitHub Packages source key. The workflow supplies
   credentials for that source during restore.
 - The default publish target is the GitHub Packages owner feed.

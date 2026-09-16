@@ -1,0 +1,40 @@
+name: Dotnet Test
+
+inputs:
+  test_paths:
+    required: true
+  configuration:
+    required: false
+    default: Release
+  arguments:
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Run tests
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        test_paths="${{ inputs.test_paths }}"
+        arguments="${{ inputs.arguments }}"
+
+        if [ -z "${test_paths//[[:space:]]/}" ]; then
+          echo "test_paths must contain at least one project, solution, or directory." >&2
+          exit 1
+        fi
+
+        while IFS= read -r test_path || [ -n "${test_path}" ]; do
+          test_path="${test_path#"${test_path%%[![:space:]]*}"}"
+          test_path="${test_path%"${test_path##*[![:space:]]}"}"
+
+          if [ -z "${test_path}" ]; then
+            continue
+          fi
+
+          dotnet test "${test_path}" \
+            -c "${{ inputs.configuration }}" \
+            ${arguments}
+        done <<< "${test_paths}"

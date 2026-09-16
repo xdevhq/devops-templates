@@ -59,12 +59,14 @@ Caller permissions:
 
 Workflow: `.github/workflows/nuget.yml`
 
-Purpose: restore, pack, and publish a NuGet package.
+Purpose: restore, optionally test, pack, and publish a NuGet package.
 
 Inputs:
 - `project_path` (required): project file to package.
+- `test_paths` (optional, default empty): multiline list of projects, solutions, or directories passed to `dotnet test` before packing. Tests run only when this input is supplied.
 - `dotnet_version` (optional, default `8.0.x`): .NET SDK version.
 - `configuration` (optional, default `Release`): build configuration used for packing.
+- `test_arguments` (optional, default empty): extra arguments appended to each `dotnet test` invocation.
 - `package_version` (optional, default empty): package version override.
 - `source_url` (optional, default empty): publish target override. Empty defaults to `https://nuget.pkg.github.com/<owner>/index.json`.
 
