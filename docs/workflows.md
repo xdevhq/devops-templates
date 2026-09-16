@@ -6,15 +6,16 @@ Reusable workflow inputs, outputs, secrets, and permissions are public contracts
 
 Workflow: `.github/workflows/build.yml`
 
-Purpose: build a container image from a selected template and push it to GHCR.
+Purpose: build a container image from a selected template and optionally push it to GHCR.
 
 Inputs:
 - `image_name` (required): GHCR package/image name.
-- `image_tag` (required): image tag to build and push.
+- `image_tag` (required): image tag to build, and push when `push_image` is true.
 - `template` (required): container template folder under `.github/containerfiles/`.
 - `context` (optional, default `.`): build context path in the consuming repository.
 - `containerfile` (optional, default `Containerfile`): Containerfile name or path resolved by the build action.
 - `build_args` (optional, default empty): extra Podman build arguments.
+- `push_image` (optional, default `true`): when false, build the image locally only and skip GHCR tag, login, and push steps.
 
 Secrets:
 - `GHCR_TOKEN` (required): token used to authenticate to GHCR and passed as a build secret for GitHub Packages dependency install or restore. Usually `${{ secrets.GITHUB_TOKEN }}`.
@@ -25,7 +26,8 @@ Outputs:
 
 Caller permissions:
 - `contents: read`
-- `packages: write`
+- `packages: read` when private GitHub Packages restore/install is required.
+- `packages: write` when `push_image` is true.
 
 ## Deploy
 

@@ -105,11 +105,14 @@ jobs:
       image_tag: ${{ github.sha }}
       template: dotnet
       build_args: --build-arg APP_PROJECT=src/<path-to-api>.csproj --build-arg APP_DLL=<app-name>.dll
+      push_image: false
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Set `APP_PROJECT` to the project file to containerize. Set `APP_DLL` to the published app assembly name, for example `Example.Gateway.Api.dll`.
+
+Set `push_image: false` for validation-only builds. The workflow still builds the image locally on the runner, but skips GHCR tag, login, and push steps.
 
 For private GitHub Packages dependencies, commit restore source policy in the
 consuming repo `NuGet.Config` and use `github` as the package source key:

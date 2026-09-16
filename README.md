@@ -35,7 +35,7 @@ The design is intentionally opinionated and proven across multiple .NET services
 
 - Build workflow requires consuming repos to set `template` explicitly.
 - Build workflow supports optional `context`, `containerfile`, and `build_args`.
-- Build workflow builds and pushes directly to GHCR.
+- Build workflow builds container images and can optionally push to GHCR.
 - Consuming repos should keep a `.containerignore` in the build context used by the workflow.
 - Deploy workflow supports Azure Web App for Containers and Azure Container Apps.
 - NuGet workflow uses the consuming repo's `NuGet.Config` for restore sources.
@@ -79,7 +79,7 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  packages: read
 
 jobs:
   build:
@@ -89,11 +89,12 @@ jobs:
       image_tag: ${{ github.sha }}
       template: dotnet
       build_args: --build-arg APP_PROJECT=src/<path-to-api>.csproj --build-arg APP_DLL=<app-name>.dll
+      push_image: false
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-See [Container builds](docs/container-builds.md) for template defaults, private feed restore, and build argument guidance.
+Set `push_image: false` for validation-only builds that should not publish to GHCR. Use `packages: write` only when publishing images. See [Container builds](docs/container-builds.md) for template defaults, private feed restore, and build argument guidance.
 
 ### Python Container Build
 

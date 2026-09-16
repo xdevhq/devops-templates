@@ -24,6 +24,10 @@ on:
         required: false
         type: string
         default: ""
+      push_image:
+        required: false
+        type: boolean
+        default: true
     secrets:
       GHCR_TOKEN:
         required: true
@@ -55,16 +59,19 @@ jobs:
           GITHUB_PACKAGES_TOKEN: ${{ secrets.GHCR_TOKEN }}
 
       - name: Tag image for GHCR
+        if: ${{ inputs.push_image }}
         uses: xdevhq/devops-templates/.github/actions/podman/tag-image@main
         with:
           image_name: ${{ inputs.image_name }}
           image_tag: ${{ inputs.image_tag }}
 
       - name: Login to GHCR
+        if: ${{ inputs.push_image }}
         run: |
           podman login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GHCR_TOKEN }}"
 
       - name: Push image to GHCR
+        if: ${{ inputs.push_image }}
         uses: xdevhq/devops-templates/.github/actions/podman/push-image@main
         with:
           image_name: ${{ inputs.image_name }}
