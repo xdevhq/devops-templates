@@ -3,6 +3,8 @@ ARG APP_PROJECT=src/App/App.csproj
 ARG APP_DLL=App.dll
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
+ARG APP_PROJECT
+ARG APP_DLL
 WORKDIR /src
 
 # Optional metadata for private GitHub Packages restores.
