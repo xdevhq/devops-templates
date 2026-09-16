@@ -1,0 +1,44 @@
+name: .NET Test
+
+on:
+  workflow_call:
+    inputs:
+      dotnet_version:
+        required: false
+        type: string
+        default: "8.0.x"
+      test_paths:
+        required: true
+        type: string
+      test_arguments:
+        required: false
+        type: string
+        default: ""
+      configuration:
+        required: false
+        type: string
+        default: Release
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      NuGetPackageSourceCredentials_github: Username=${{ github.actor }};Password=${{ github.token }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ inputs.dotnet_version }}
+
+      - name: Run tests
+        uses: xdevhq/devops-templates/.github/actions/dotnet/test@main
+        with:
+          test_paths: ${{ inputs.test_paths }}
+          configuration: ${{ inputs.configuration }}
+          arguments: ${{ inputs.test_arguments }}

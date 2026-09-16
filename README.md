@@ -148,6 +148,27 @@ jobs:
 
 See [Deployments](docs/deployments.md) for target-specific variables, secrets, and port behavior.
 
+### .NET Test
+
+```yaml
+name: Test
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  test:
+    uses: <owner>/<templates-repo>/.github/workflows/dotnet-test.yml@main
+    with:
+      test_paths: |
+        ./Platform.Example.slnx
+```
+
 ### NuGet Publish
 
 ```yaml

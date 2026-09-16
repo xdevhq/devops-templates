@@ -29,6 +29,22 @@ Caller permissions:
 - `packages: read` when private GitHub Packages restore/install is required.
 - `packages: write` when `push_image` is true.
 
+## .NET Test
+
+Workflow: `.github/workflows/dotnet-test.yml`
+
+Purpose: run one or more `dotnet test` targets for a consuming repository.
+
+Inputs:
+- `test_paths` (required): multiline list of projects, solutions, or directories passed to `dotnet test`.
+- `dotnet_version` (optional, default `8.0.x`): .NET SDK version.
+- `configuration` (optional, default `Release`): test build configuration.
+- `test_arguments` (optional, default empty): extra arguments appended to each `dotnet test` invocation.
+
+Caller permissions:
+- `contents: read`
+- `packages: read` when private GitHub Packages restore is required.
+
 ## Deploy
 
 Workflow: `.github/workflows/deploy.yml`
